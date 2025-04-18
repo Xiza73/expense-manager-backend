@@ -115,23 +115,9 @@ export const transactionService = {
     }
   },
 
-  createTransaction: async (
-    user: AuthToken,
-    {
-      amount,
-      currency,
-      isActive,
-      name,
-      type,
-      description,
-      categoryId,
-      serviceId,
-      accountId,
-      date,
-    }: CreateTransactionRequestObject
-  ): Promise<NullResponse> => {
+  createTransaction: async (user: AuthToken, data: CreateTransactionRequestObject): Promise<NullResponse> => {
     try {
-      const existingAccount = await accountRepository.findOneBy({ id: accountId, user_id: user.id });
+      const existingAccount = await accountRepository.findOneBy({ id: data.accountId, user_id: user.id });
 
       if (!existingAccount) {
         return new ServiceResponse(
@@ -146,7 +132,7 @@ export const transactionService = {
       // const existingSettings = await settingsRepository.findOneBy({ user_id: user.id });
 
       // if (existingAccount.currency !== currency && !existingSettings?.exchangeRate) {
-      if (existingAccount.currency !== currency) {
+      if (existingAccount.currency !== data.currency) {
         return new ServiceResponse(
           ResponseStatus.Failed,
           // 'You need to set up your exchange rate',
@@ -157,7 +143,7 @@ export const transactionService = {
         );
       }
 
-      const existingCategory = await transactionCategoryRepository.findOneBy({ id: categoryId, user_id: user.id });
+      const existingCategory = await transactionCategoryRepository.findOneBy({ id: data.categoryId, user_id: user.id });
 
       if (!existingCategory) {
         return new ServiceResponse(
@@ -169,7 +155,7 @@ export const transactionService = {
         );
       }
 
-      const existingService = await transactionServiceRepository.findOneBy({ id: serviceId, user_id: user.id });
+      const existingService = await transactionServiceRepository.findOneBy({ id: data.serviceId, user_id: user.id });
 
       if (!existingService) {
         return new ServiceResponse(
@@ -181,8 +167,8 @@ export const transactionService = {
         );
       }
 
-      if (date) {
-        if (isNaN(date.getTime())) {
+      if (data.date) {
+        if (isNaN(data.date.getTime())) {
           return new ServiceResponse(
             ResponseStatus.Failed,
             'Invalid date',
@@ -194,20 +180,20 @@ export const transactionService = {
       }
 
       const newTransaction = transactionRepository.create({
-        amount,
-        currency,
-        isActive,
-        name,
-        type,
-        ...(description ? { description } : {}),
-        ...(date
-          ? { date }
+        ...data,
+        ...(data.description
+          ? { description: data.description }
+          : {
+              description: undefined,
+            }),
+        ...(data.date
+          ? { date: data.date }
           : {
               date: new Date(),
             }),
-        category_id: categoryId,
-        service_id: serviceId,
-        account_id: accountId,
+        category_id: data.categoryId,
+        service_id: data.serviceId,
+        account_id: data.accountId,
         user_id: user.id,
       });
 
@@ -223,7 +209,7 @@ export const transactionService = {
     } catch (error) {
       return new ServiceResponse(
         ResponseStatus.Failed,
-        handleErrorMessage('Failed to recognize text', error),
+        handleErrorMessage('Failed on creating transaction', error),
         null,
         StatusCodes.INTERNAL_SERVER_ERROR,
         ErrorCode.UNKNOWN_500
@@ -233,19 +219,8 @@ export const transactionService = {
 
   updateTransaction: async (
     user: AuthToken,
-    {
-      id: transactionId,
-      amount,
-      currency,
-      isActive,
-      name,
-      date,
-      type,
-      description,
-      categoryId,
-      serviceId,
-      accountId,
-    }: UpdateTransactionRequestObject
+    transactionId: number,
+    data: UpdateTransactionRequestObject
   ): Promise<NullResponse> => {
     try {
       const existingTransaction = await transactionRepository.findOneBy({ id: transactionId, user_id: user.id });
@@ -260,7 +235,7 @@ export const transactionService = {
         );
       }
 
-      const existingAccount = await accountRepository.findOneBy({ id: accountId, user_id: user.id });
+      const existingAccount = await accountRepository.findOneBy({ id: data.accountId, user_id: user.id });
 
       if (!existingAccount) {
         return new ServiceResponse(
@@ -275,7 +250,7 @@ export const transactionService = {
       // const existingSettings = await settingsRepository.findOneBy({ user_id: user.id });
 
       // if (existingAccount.currency !== currency && !existingSettings?.exchangeRate) {
-      if (existingAccount.currency !== currency) {
+      if (existingAccount.currency !== data.currency) {
         return new ServiceResponse(
           ResponseStatus.Failed,
           // 'You need to set up your exchange rate',
@@ -286,7 +261,7 @@ export const transactionService = {
         );
       }
 
-      const existingCategory = await transactionCategoryRepository.findOneBy({ id: categoryId, user_id: user.id });
+      const existingCategory = await transactionCategoryRepository.findOneBy({ id: data.categoryId, user_id: user.id });
 
       if (!existingCategory) {
         return new ServiceResponse(
@@ -298,7 +273,7 @@ export const transactionService = {
         );
       }
 
-      const existingService = await transactionServiceRepository.findOneBy({ id: serviceId, user_id: user.id });
+      const existingService = await transactionServiceRepository.findOneBy({ id: data.serviceId, user_id: user.id });
 
       if (!existingService) {
         return new ServiceResponse(
@@ -310,16 +285,16 @@ export const transactionService = {
         );
       }
 
-      existingTransaction.amount = amount;
-      existingTransaction.category_id = categoryId;
-      existingTransaction.currency = currency;
-      existingTransaction.isActive = isActive;
-      existingTransaction.name = name;
-      existingTransaction.date = date;
-      existingTransaction.type = type;
-      existingTransaction.description = description || undefined;
-      existingTransaction.service_id = serviceId;
-      existingTransaction.account_id = accountId;
+      existingTransaction.amount = data.amount;
+      existingTransaction.category_id = data.categoryId;
+      existingTransaction.isActive = data.isActive;
+      existingTransaction.name = data.name;
+      existingTransaction.date = data.date;
+      existingTransaction.type = data.type;
+      existingTransaction.paymentMethod = data.paymentMethod;
+      existingTransaction.description = data.description || undefined;
+      existingTransaction.service_id = data.serviceId;
+      existingTransaction.account_id = data.accountId;
 
       await transactionRepository.save(existingTransaction);
 

@@ -7,13 +7,17 @@ import { createApiResponses } from '@/config/api-docs/openAPIResponseBuilders';
 import { NullResponseSchema } from '@/domain/responses/null.response';
 import { Method, Module } from '@/domain/route.enum';
 import { validateRequest } from '@/utils/http-handlers.util';
+import { idParamExample } from '@/utils/id-param-example.util';
 
 import { transactionController } from '../controllers/transaction.controller';
 import {
   CreateTransactionRequestExample,
   CreateTransactionRequestSchema,
 } from '../domain/requests/create-transaction.request';
-import { GetTransactionsRequestSchema } from '../domain/requests/get-transactions.request';
+import {
+  GetTransactionsRequestParameters,
+  GetTransactionsRequestSchema,
+} from '../domain/requests/get-transactions.request';
 import {
   UpdateTransactionRequestExample,
   UpdateTransactionRequestSchema,
@@ -30,64 +34,14 @@ export const transactionRouter: Router = (() => {
     method: Method.GET,
     path: '/api/transaction',
     tags: [Module.TRANSACTION],
+    summary: 'Get all transactions',
     responses: createApiResponses([
       {
         schema: GetTransactionsResponseSchema,
         statusCode: StatusCodes.OK,
       },
     ]),
-    parameters: [
-      {
-        name: 'page',
-        in: 'query',
-        required: false,
-        description: 'Page number',
-        schema: {
-          type: 'number',
-          example: 1,
-        },
-      },
-      {
-        name: 'limit',
-        in: 'query',
-        required: false,
-        description: 'Number of items per page',
-        schema: {
-          type: 'number',
-          example: 10,
-        },
-      },
-      {
-        name: 'accountId',
-        in: 'query',
-        required: false,
-        description: 'Account ID',
-        schema: {
-          type: 'number',
-          example: 1,
-        },
-      },
-      {
-        name: 'categoryId',
-        in: 'query',
-        required: false,
-        description: 'Category ID',
-        schema: {
-          type: 'number',
-          example: 1,
-        },
-      },
-      {
-        name: 'serviceId',
-        in: 'query',
-        required: false,
-        description: 'Service ID',
-        schema: {
-          type: 'number',
-          example: 1,
-        },
-      },
-    ],
+    parameters: GetTransactionsRequestParameters,
   });
   router.get('/', authenticate, validateRequest(GetTransactionsRequestSchema), transactionController.getTransactions);
 
@@ -95,24 +49,14 @@ export const transactionRouter: Router = (() => {
     method: Method.GET,
     path: '/api/transaction/{id}',
     tags: [Module.TRANSACTION],
+    summary: 'Get a transaction',
     responses: createApiResponses([
       {
         schema: GetTransactionResponseSchema,
         statusCode: StatusCodes.OK,
       },
     ]),
-    parameters: [
-      {
-        name: 'id',
-        in: 'path',
-        required: true,
-        description: 'Transaction ID',
-        schema: {
-          type: 'number',
-          example: 1,
-        },
-      },
-    ],
+    parameters: idParamExample('Transaction ID'),
   });
   router.get('/:id', authenticate, transactionController.getTransaction);
 
@@ -120,6 +64,7 @@ export const transactionRouter: Router = (() => {
     method: Method.POST,
     path: '/api/transaction',
     tags: [Module.TRANSACTION],
+    summary: 'Create a transaction',
     responses: createApiResponses([
       {
         schema: NullResponseSchema,
@@ -143,8 +88,9 @@ export const transactionRouter: Router = (() => {
 
   transactionRegistry.registerPath({
     method: Method.PUT,
-    path: '/api/transaction',
+    path: '/api/transaction/{id}',
     tags: [Module.TRANSACTION],
+    summary: 'Update a transaction',
     responses: createApiResponses([
       {
         schema: NullResponseSchema,
@@ -158,9 +104,10 @@ export const transactionRouter: Router = (() => {
         },
       },
     },
+    parameters: idParamExample('Transaction ID'),
   });
   router.put(
-    '/',
+    '/:id',
     authenticate,
     validateRequest(UpdateTransactionRequestSchema),
     transactionController.updateTransaction
@@ -170,24 +117,14 @@ export const transactionRouter: Router = (() => {
     method: Method.DELETE,
     path: '/api/transaction/{id}',
     tags: [Module.TRANSACTION],
+    summary: 'Delete a transaction',
     responses: createApiResponses([
       {
         schema: NullResponseSchema,
         statusCode: StatusCodes.OK,
       },
     ]),
-    parameters: [
-      {
-        name: 'id',
-        in: 'path',
-        required: true,
-        description: 'Transaction ID',
-        schema: {
-          type: 'number',
-          example: 1,
-        },
-      },
-    ],
+    parameters: idParamExample('Transaction ID'),
   });
   router.delete('/:id', authenticate, transactionController.deleteTransaction);
 

@@ -5,7 +5,6 @@ import { z } from '@/config/zod.config';
 import { ServiceResponse, ServiceResponseSchema } from '@/domain/service-response.model';
 import { commonValidations } from '@/utils/common-validation.util';
 
-import { PaymentMethod } from '../payment-method.enum';
 import { TransactionType } from '../transaction-type.enum';
 
 export const GetTransactionsResponseObject = z.object({
@@ -29,8 +28,6 @@ export const GetTransactionsResponseObject = z.object({
       }),
       account: z.object({
         id: z.number(),
-        name: z.string(),
-        paymentMethod: z.nativeEnum(PaymentMethod),
       }),
     })
   ),

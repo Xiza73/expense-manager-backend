@@ -82,6 +82,22 @@ export const accountService = {
 
   createAccount: async (user: AuthToken, data: CreateAccountRequestObject): Promise<NullResponse> => {
     try {
+      const existingAccount = await accountRepository.findOneBy({
+        user_id: user.id,
+        month: data.month,
+        year: data.year,
+      });
+
+      if (existingAccount) {
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'Account already exists for this month and year',
+          null,
+          StatusCodes.BAD_REQUEST,
+          ErrorCode.ACCOUNT_ALREADY_EXISTS_400
+        );
+      }
+
       const newAccount = accountRepository.create({
         ...data,
         balance: data.amount,
@@ -126,6 +142,24 @@ export const accountService = {
         );
       }
 
+      if (data.month !== existingAccount.month || data.year !== existingAccount.year) {
+        const existingAccountForMonth = await accountRepository.findOneBy({
+          user_id: user.id,
+          month: data.month,
+          year: data.year,
+        });
+
+        if (existingAccountForMonth) {
+          return new ServiceResponse(
+            ResponseStatus.Failed,
+            'Account already exists for this month and year',
+            null,
+            StatusCodes.BAD_REQUEST,
+            ErrorCode.ACCOUNT_ALREADY_EXISTS_400
+          );
+        }
+      }
+
       if (data.currency !== existingAccount.currency) {
         return new ServiceResponse(
           ResponseStatus.Failed,
@@ -136,7 +170,7 @@ export const accountService = {
         );
       }
 
-      existingAccount.balance += data.amount - existingAccount.amount;
+      existingAccount.balance = Number(existingAccount.balance) + Number(data.amount) - Number(existingAccount.amount);
       existingAccount.amount = data.amount;
       existingAccount.color = data.color || null;
       existingAccount.description = data.description || null;

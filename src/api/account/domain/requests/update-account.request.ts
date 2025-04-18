@@ -15,8 +15,14 @@ const UpdateAccountRequestObject = zod.object({
 });
 export type UpdateAccountRequestObject = zod.infer<typeof UpdateAccountRequestObject>;
 
+const UpdateAccountRequestParam = zod.object({
+  id: commonValidations.toValidNumber,
+});
+export type UpdateAccountRequestParam = zod.infer<typeof UpdateAccountRequestParam>;
+
 export const UpdateAccountRequestSchema = zod.object({
   body: UpdateAccountRequestObject,
+  params: UpdateAccountRequestParam,
 });
 
 export const UpdateAccountRequestParameters: Parameters = [

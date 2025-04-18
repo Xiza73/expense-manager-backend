@@ -12,11 +12,12 @@ export const CreateTransactionRequestObject = z.object({
   amount: commonValidations.toValidNumber,
   currency: z.nativeEnum(Currency),
   type: z.nativeEnum(TransactionType),
+  date: commonValidations.toValidDate.optional(),
+  paymentMethod: commonValidations.paymentMethod,
   isActive: z.boolean(),
   categoryId: z.number(),
   serviceId: z.number(),
   accountId: z.number(),
-  date: commonValidations.toValidDate.optional(),
 });
 export type CreateTransactionRequestObject = zod.infer<typeof CreateTransactionRequestObject>;
 
@@ -30,6 +31,7 @@ export const CreateTransactionRequestExample: CreateTransactionRequestObject = {
   amount: 100,
   currency: 'USD',
   type: 'INCOME',
+  paymentMethod: 'CREDIT_CARD',
   isActive: true,
   categoryId: 1,
   serviceId: 1,

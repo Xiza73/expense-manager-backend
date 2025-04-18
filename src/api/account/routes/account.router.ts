@@ -29,6 +29,7 @@ export const accountRouter: Router = (() => {
     method: Method.GET,
     path: '/api/account',
     tags: [Module.ACCOUNT],
+    summary: 'Get all accounts',
     responses: createApiResponses([
       {
         schema: GetAccountsResponseSchema,
@@ -42,6 +43,7 @@ export const accountRouter: Router = (() => {
     method: Method.GET,
     path: '/api/account/{id}',
     tags: [Module.ACCOUNT],
+    summary: 'Get an account',
     responses: createApiResponses([
       {
         schema: GetAccountResponseSchema,
@@ -56,6 +58,7 @@ export const accountRouter: Router = (() => {
     method: Method.POST,
     path: '/api/account',
     tags: [Module.ACCOUNT],
+    summary: 'Create an account',
     responses: createApiResponses([
       {
         schema: NullResponseSchema,
@@ -76,6 +79,7 @@ export const accountRouter: Router = (() => {
     method: Method.PUT,
     path: '/api/account/{id}',
     tags: [Module.ACCOUNT],
+    summary: 'Update an account',
     responses: createApiResponses([
       {
         schema: NullResponseSchema,
@@ -97,6 +101,7 @@ export const accountRouter: Router = (() => {
     method: Method.DELETE,
     path: '/api/account/{id}',
     tags: [Module.ACCOUNT],
+    summary: 'Delete an account',
     responses: createApiResponses([
       {
         schema: NullResponseSchema,

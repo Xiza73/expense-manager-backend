@@ -37,7 +37,11 @@ export const transactionController = {
 
   updateTransaction: async (req: Request, res: Response) => {
     try {
-      const serviceResponse = await transactionService.updateTransaction(req.decodedUser, req.body);
+      const serviceResponse = await transactionService.updateTransaction(
+        req.decodedUser,
+        Number(req.params.id),
+        req.body
+      );
 
       handleServiceResponse(serviceResponse, res);
     } catch (error) {
