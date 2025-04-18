@@ -1,0 +1,70 @@
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
+import { AuthToken } from '@/api/auth/entities/auth-token.entity';
+import { Transaction } from '@/api/transaction/entities/transaction.entity';
+
+import { Currency } from '../domain/currency.enum';
+import { Month } from '../domain/month.enum';
+
+@Entity({ name: 'account' })
+export class Account {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: 'int', nullable: false })
+  user_id: number;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  description: string | null;
+
+  @Column({ type: 'enum', enum: Month })
+  month: Month;
+
+  @Column({ type: 'int', nullable: false })
+  year: number;
+
+  @Column({ type: 'enum', enum: Currency })
+  currency: Currency;
+
+  @Column({ type: 'numeric', precision: 10, scale: 2 })
+  amount: number;
+
+  @Column({ type: 'numeric', precision: 10, scale: 2 })
+  balance: number;
+
+  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
+  expenseAmount: number;
+
+  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
+  incomeAmount: number;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  color: string | null;
+
+  @Column({ type: 'boolean', default: true })
+  isActive: boolean;
+
+  @OneToMany(() => Transaction, (transaction) => transaction.account, {})
+  transactions: Transaction[];
+
+  @ManyToOne(() => AuthToken, (authToken) => authToken.accounts, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
+  user: AuthToken;
+
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  updatedAt: Date;
+}

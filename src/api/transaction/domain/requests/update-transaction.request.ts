@@ -1,0 +1,40 @@
+import { z as zod } from 'zod';
+
+import { Currency } from '@/api/account/domain/currency.enum';
+import { z } from '@/config/zod.config';
+import { commonValidations } from '@/utils/common-validation.util';
+
+import { TransactionType } from '../transaction-type.enum';
+
+export const UpdateTransactionRequestObject = z.object({
+  id: z.number(),
+  name: z.string(),
+  description: z.string().nullable(),
+  amount: commonValidations.toValidNumber,
+  currency: z.nativeEnum(Currency),
+  type: z.nativeEnum(TransactionType),
+  isActive: z.boolean(),
+  categoryId: z.number(),
+  serviceId: z.number(),
+  accountId: z.number(),
+  date: commonValidations.toValidDate,
+});
+export type UpdateTransactionRequestObject = zod.infer<typeof UpdateTransactionRequestObject>;
+
+export const UpdateTransactionRequestSchema = z.object({
+  body: UpdateTransactionRequestObject,
+});
+
+export const UpdateTransactionRequestExample: UpdateTransactionRequestObject = {
+  id: 1,
+  name: 'My Transaction',
+  description: 'This is my transaction',
+  amount: 100,
+  currency: 'USD',
+  type: 'INCOME',
+  isActive: true,
+  categoryId: 1,
+  serviceId: 1,
+  accountId: 1,
+  date: new Date(),
+};
