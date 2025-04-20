@@ -14,7 +14,7 @@ export const CreateTransactionRequestObject = z.object({
   type: z.nativeEnum(TransactionType),
   date: commonValidations.toValidDate.optional(),
   paymentMethod: commonValidations.paymentMethod,
-  isActive: z.boolean(),
+  isActive: z.boolean().default(true),
   categoryId: z.number(),
   serviceId: z.number(),
   accountId: z.number(),

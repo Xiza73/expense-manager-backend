@@ -70,9 +70,7 @@ export class Transaction {
   @JoinColumn({ name: 'service_id', referencedColumnName: 'id' })
   service: TransactionService;
 
-  @ManyToOne(() => Account, (account) => account.transactions, {
-    eager: true,
-  })
+  @ManyToOne(() => Account, (account) => account.transactions, {})
   @JoinColumn({ name: 'account_id', referencedColumnName: 'id' })
   account: Account;
 

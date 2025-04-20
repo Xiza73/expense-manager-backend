@@ -15,6 +15,7 @@ export const GetTransactionResponseObject = z.object({
   amount: commonValidations.toValidNumber,
   currency: z.nativeEnum(Currency),
   type: z.nativeEnum(TransactionType),
+  paymentMethod: z.nativeEnum(PaymentMethod),
   date: z.date(),
   isActive: z.boolean(),
   category: z.object({
@@ -28,7 +29,6 @@ export const GetTransactionResponseObject = z.object({
   account: z.object({
     id: z.number(),
     name: z.string(),
-    paymentMethod: z.nativeEnum(PaymentMethod),
   }),
 });
 type GetTransactionResponseObject = zod.infer<typeof GetTransactionResponseObject>;

@@ -7,7 +7,7 @@ import { accountService } from '../services/account.service';
 export const accountController = {
   getAccounts: async (req: Request, res: Response) => {
     try {
-      const serviceResponse = await accountService.getAccounts(req.decodedUser);
+      const serviceResponse = await accountService.getAccounts(req.decodedUser, req.query);
 
       handleServiceResponse(serviceResponse, res);
     } catch (error) {
@@ -18,6 +18,16 @@ export const accountController = {
   getAccount: async (req: Request, res: Response) => {
     try {
       const serviceResponse = await accountService.getAccount(req.decodedUser, Number(req.params.id));
+
+      handleServiceResponse(serviceResponse, res);
+    } catch (error) {
+      handleControllerError(error, res);
+    }
+  },
+
+  getLatestAccount: async (req: Request, res: Response) => {
+    try {
+      const serviceResponse = await accountService.getLatestAccount(req.decodedUser);
 
       handleServiceResponse(serviceResponse, res);
     } catch (error) {

@@ -8,6 +8,7 @@ import { ResponseStatus, ServiceResponse } from '@/domain/service-response.model
 import { handleErrorMessage } from '@/utils/error.util';
 
 import { CreateAccountRequestObject } from '../domain/requests/create-account.request';
+import { GetAccountsRequestObject } from '../domain/requests/get-accounts.request';
 import { UpdateAccountRequestObject } from '../domain/requests/update-account.request';
 import { GetAccountResponse, GetAccountResponseObject } from '../domain/responses/get-account.response';
 import { GetAccountsResponse, GetAccountsResponseObject } from '../domain/responses/get-accounts.response';
@@ -17,16 +18,40 @@ import { monthYearOrder } from '../utils/month-year-order.util';
 export const accountRepository = AppDataSource.getRepository(Account);
 
 export const accountService = {
-  getAccounts: async (user: AuthToken): Promise<GetAccountsResponse> => {
+  getAccounts: async (
+    user: AuthToken,
+    { page = 1, limit = 10, month, year }: GetAccountsRequestObject
+  ): Promise<GetAccountsResponse> => {
     try {
-      const accounts = await accountRepository.find({
-        where: { user_id: user.id },
-        // order: { createdAt: 'DESC' },
+      const queryBuilder = accountRepository
+        .createQueryBuilder('account')
+        .leftJoinAndSelect('account.user', 'user')
+        .where('account.user_id = :userId', { userId: user.id });
+
+      if (month) {
+        queryBuilder.andWhere('account.month = :month', { month });
+      }
+
+      if (year) {
+        queryBuilder.andWhere('account.year = :year', { year });
+      }
+
+      const accountsResponse = await queryBuilder
+        .orderBy('account.createdAt', 'DESC')
+        .take(limit)
+        .skip((page - 1) * limit)
+        .getManyAndCount();
+
+      const accounts = accountsResponse[0];
+      const total = accountsResponse[1];
+      const pages = Math.ceil(total / limit);
+
+      const response = GetAccountsResponseObject.parse({
+        data: accounts,
+        total,
+        pages,
+        page,
       });
-
-      accounts.sort((a, b) => monthYearOrder(a.month, a.year, b.month, b.year));
-
-      const response = GetAccountsResponseObject.parse({ accounts });
 
       return new ServiceResponse(
         ResponseStatus.Success,
@@ -49,6 +74,54 @@ export const accountService = {
   getAccount: async (user: AuthToken, accountId: number): Promise<GetAccountResponse> => {
     try {
       const account = await accountRepository.findOneBy({ id: accountId, user_id: user.id });
+
+      if (!account) {
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'Account not found',
+          null,
+          StatusCodes.NOT_FOUND,
+          ErrorCode.ACCOUNT_NOT_FOUND_404
+        );
+      }
+
+      const response = GetAccountResponseObject.parse(account);
+
+      return new ServiceResponse(
+        ResponseStatus.Success,
+        'Account retrieved successfully',
+        response,
+        StatusCodes.OK,
+        SuccessCode.SUCCESS_200
+      );
+    } catch (error) {
+      return new ServiceResponse(
+        ResponseStatus.Failed,
+        handleErrorMessage('Failed to retrieve account', error),
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        ErrorCode.UNKNOWN_500
+      );
+    }
+  },
+
+  getLatestAccount: async (user: AuthToken): Promise<GetAccountResponse> => {
+    try {
+      const accounts = await accountRepository.find({
+        where: { user_id: user.id },
+      });
+
+      if (!accounts.length) {
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'Account not found',
+          null,
+          StatusCodes.NOT_FOUND,
+          ErrorCode.ACCOUNT_NOT_FOUND_404
+        );
+      }
+
+      const account = accounts.sort((a, b) => monthYearOrder(b.month, b.year, a.month, a.year))[0];
 
       if (!account) {
         return new ServiceResponse(

@@ -41,6 +41,20 @@ export const accountRouter: Router = (() => {
 
   accountRegistry.registerPath({
     method: Method.GET,
+    path: '/api/account/latest',
+    tags: [Module.ACCOUNT],
+    summary: 'Get the latest account',
+    responses: createApiResponses([
+      {
+        schema: GetAccountResponseSchema,
+        statusCode: StatusCodes.OK,
+      },
+    ]),
+  });
+  router.get('/latest', authenticate, accountController.getLatestAccount);
+
+  accountRegistry.registerPath({
+    method: Method.GET,
     path: '/api/account/{id}',
     tags: [Module.ACCOUNT],
     summary: 'Get an account',
