@@ -22,9 +22,9 @@ export const GetAccountsResponseObject = z.object({
       color: z.string().nullable(),
     })
   ),
-  total: z.number(),
-  pages: z.number(),
-  page: z.number(),
+  total: commonValidations.toValidNumber,
+  pages: commonValidations.toValidNumber,
+  page: commonValidations.toValidNumber,
 });
 type GetAccountsResponseObject = zod.infer<typeof GetAccountsResponseObject>;
 
