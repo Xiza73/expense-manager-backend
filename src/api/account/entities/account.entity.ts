@@ -1,4 +1,6 @@
 import {
+  BeforeInsert,
+  BeforeUpdate,
   Column,
   CreateDateColumn,
   Entity,
@@ -13,7 +15,7 @@ import { AuthToken } from '@/api/auth/entities/auth-token.entity';
 import { Transaction } from '@/api/transaction/entities/transaction.entity';
 
 import { Currency } from '../domain/currency.enum';
-import { Month } from '../domain/month.enum';
+import { Month, MonthOrder } from '../domain/month.enum';
 
 @Entity({ name: 'account' })
 export class Account {
@@ -31,6 +33,9 @@ export class Account {
 
   @Column({ type: 'int', nullable: false })
   year: number;
+
+  @Column({ type: 'timestamp without time zone' })
+  date: Date;
 
   @Column({ type: 'enum', enum: Currency })
   currency: Currency;
@@ -67,4 +72,10 @@ export class Account {
 
   @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  updateDate() {
+    this.date = new Date(`${this.year}-${MonthOrder[this.month]}-01`);
+  }
 }

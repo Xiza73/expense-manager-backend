@@ -13,7 +13,6 @@ import { UpdateAccountRequestObject } from '../domain/requests/update-account.re
 import { GetAccountResponse, GetAccountResponseObject } from '../domain/responses/get-account.response';
 import { GetAccountsResponse, GetAccountsResponseObject } from '../domain/responses/get-accounts.response';
 import { Account } from '../entities/account.entity';
-import { monthYearOrder } from '../utils/month-year-order.util';
 
 export const accountRepository = AppDataSource.getRepository(Account);
 
@@ -37,7 +36,7 @@ export const accountService = {
       }
 
       const accountsResponse = await queryBuilder
-        .orderBy('account.createdAt', 'DESC')
+        .orderBy('account.date', 'DESC')
         .take(limit)
         .skip((page - 1) * limit)
         .getManyAndCount();
@@ -107,21 +106,15 @@ export const accountService = {
 
   getLatestAccount: async (user: AuthToken): Promise<GetAccountResponse> => {
     try {
-      const accounts = await accountRepository.find({
-        where: { user_id: user.id },
-      });
-
-      if (!accounts.length) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Account not found',
-          null,
-          StatusCodes.NOT_FOUND,
-          ErrorCode.ACCOUNT_NOT_FOUND_404
-        );
-      }
-
-      const account = accounts.sort((a, b) => monthYearOrder(b.month, b.year, a.month, a.year))[0];
+      const account = (
+        await accountRepository.find({
+          where: { user_id: user.id },
+          order: {
+            date: 'DESC',
+          },
+          take: 1,
+        })
+      )?.[0];
 
       if (!account) {
         return new ServiceResponse(
