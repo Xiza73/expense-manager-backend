@@ -47,7 +47,7 @@ export const transactionService = {
       }
 
       const transactionsResponse = await queryBuilder
-        .orderBy('transaction.createdAt', 'DESC')
+        .orderBy('transaction.date', 'DESC')
         .take(limit)
         .skip((page - 1) * limit)
         .getManyAndCount();

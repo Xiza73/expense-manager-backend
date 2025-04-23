@@ -17,7 +17,7 @@ export const GetTransactionsResponseObject = z.object({
       amount: commonValidations.toValidNumber,
       currency: z.nativeEnum(Currency),
       type: z.nativeEnum(TransactionType),
-      date: z.string(),
+      date: z.date(),
       paymentMethod: z.nativeEnum(PaymentMethod),
       isActive: z.boolean(),
       category: z.object({
