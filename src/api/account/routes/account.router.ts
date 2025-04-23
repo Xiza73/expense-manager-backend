@@ -17,6 +17,7 @@ import {
   UpdateAccountRequestParameters,
   UpdateAccountRequestSchema,
 } from '../domain/requests/update-account.request';
+import { CreateAccountResponseSchema } from '../domain/responses/create-account.response';
 import { GetAccountResponseSchema } from '../domain/responses/get-account.response';
 import { GetAccountsResponseSchema } from '../domain/responses/get-accounts.response';
 
@@ -75,7 +76,7 @@ export const accountRouter: Router = (() => {
     summary: 'Create an account',
     responses: createApiResponses([
       {
-        schema: NullResponseSchema,
+        schema: CreateAccountResponseSchema,
         statusCode: StatusCodes.CREATED,
       },
     ]),

@@ -10,6 +10,7 @@ import { handleErrorMessage } from '@/utils/error.util';
 import { CreateAccountRequestObject } from '../domain/requests/create-account.request';
 import { GetAccountsRequestObject } from '../domain/requests/get-accounts.request';
 import { UpdateAccountRequestObject } from '../domain/requests/update-account.request';
+import { CreateAccountResponse, CreateAccountResponseObject } from '../domain/responses/create-account.response';
 import { GetAccountResponse, GetAccountResponseObject } from '../domain/responses/get-account.response';
 import { GetAccountsResponse, GetAccountsResponseObject } from '../domain/responses/get-accounts.response';
 import { Account } from '../entities/account.entity';
@@ -146,7 +147,7 @@ export const accountService = {
     }
   },
 
-  createAccount: async (user: AuthToken, data: CreateAccountRequestObject): Promise<NullResponse> => {
+  createAccount: async (user: AuthToken, data: CreateAccountRequestObject): Promise<CreateAccountResponse> => {
     try {
       const existingAccount = await accountRepository.findOneBy({
         user_id: user.id,
@@ -170,12 +171,16 @@ export const accountService = {
         user_id: user.id,
       });
 
-      await accountRepository.save(newAccount);
+      const account = await accountRepository.save(newAccount);
+
+      const response = CreateAccountResponseObject.parse({
+        id: account.id,
+      });
 
       return new ServiceResponse(
         ResponseStatus.Success,
         'Account created successfully',
-        null,
+        response,
         StatusCodes.CREATED,
         SuccessCode.SUCCESS_201
       );
