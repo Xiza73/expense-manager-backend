@@ -7,6 +7,7 @@ import { NullResponse } from '@/domain/responses/null.response';
 import { ResponseStatus, ServiceResponse } from '@/domain/service-response.model';
 import { handleErrorMessage } from '@/utils/error.util';
 
+import { MonthOrder } from '../domain/month.enum';
 import { CreateAccountRequestObject } from '../domain/requests/create-account.request';
 import { GetAccountsRequestObject } from '../domain/requests/get-accounts.request';
 import { UpdateAccountRequestObject } from '../domain/requests/update-account.request';
@@ -107,15 +108,7 @@ export const accountService = {
 
   getLatestAccount: async (user: AuthToken): Promise<GetAccountResponse> => {
     try {
-      const account = (
-        await accountRepository.find({
-          where: { user_id: user.id },
-          order: {
-            date: 'DESC',
-          },
-          take: 1,
-        })
-      )?.[0];
+      const account = await accountRepository.findOneBy({ user_id: user.id, isDefault: true });
 
       if (!account) {
         return new ServiceResponse(
@@ -165,10 +158,47 @@ export const accountService = {
         );
       }
 
+      let isDefault = false;
+
+      const latestAccount = (
+        await accountRepository.find({
+          where: { user_id: user.id },
+          order: {
+            date: 'DESC',
+          },
+          take: 1,
+        })
+      )?.[0];
+
+      if (!latestAccount) {
+        isDefault = true;
+      }
+
+      if (latestAccount?.isDefault) {
+        const latestAccountDate = new Date(latestAccount.date);
+        const newAccountDate = new Date(`${data.year}-${MonthOrder[data.month]}-01`);
+        const latestAccountMonth = latestAccountDate.getMonth();
+        const newAccountMonth = newAccountDate.getMonth();
+        const latestAccountYear = latestAccountDate.getFullYear();
+        const newAccountYear = newAccountDate.getFullYear();
+
+        if (
+          newAccountMonth > latestAccountMonth ||
+          (newAccountMonth === latestAccountMonth && newAccountYear > latestAccountYear)
+        ) {
+          accountRepository.update(latestAccount.id, {
+            isDefault: false,
+          });
+
+          isDefault = true;
+        }
+      }
+
       const newAccount = accountRepository.create({
         ...data,
         balance: data.amount,
         user_id: user.id,
+        isDefault,
       });
 
       const account = await accountRepository.save(newAccount);
@@ -295,6 +325,60 @@ export const accountService = {
       return new ServiceResponse(
         ResponseStatus.Failed,
         handleErrorMessage('Failed to delete account', error),
+        null,
+        StatusCodes.INTERNAL_SERVER_ERROR,
+        ErrorCode.UNKNOWN_500
+      );
+    }
+  },
+
+  setDefaultAccount: async (user: AuthToken, accountId: number): Promise<NullResponse> => {
+    try {
+      const existingAccount = await accountRepository.findOneBy({ id: accountId, user_id: user.id });
+
+      if (!existingAccount) {
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'Account not found',
+          null,
+          StatusCodes.NOT_FOUND,
+          ErrorCode.ACCOUNT_NOT_FOUND_404
+        );
+      }
+
+      const defaultAccount = await accountRepository.findOneBy({ user_id: user.id, isDefault: true });
+
+      if (defaultAccount?.id === existingAccount.id) {
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'Account is already default',
+          null,
+          StatusCodes.BAD_REQUEST,
+          ErrorCode.ACCOUNT_ALREADY_DEFAULT_400
+        );
+      }
+
+      if (defaultAccount) {
+        await accountRepository.update(defaultAccount.id, {
+          isDefault: false,
+        });
+      }
+
+      await accountRepository.update(existingAccount.id, {
+        isDefault: true,
+      });
+
+      return new ServiceResponse(
+        ResponseStatus.Success,
+        'Account set as default successfully',
+        null,
+        StatusCodes.OK,
+        SuccessCode.SUCCESS_200
+      );
+    } catch (error) {
+      return new ServiceResponse(
+        ResponseStatus.Failed,
+        handleErrorMessage('Failed to set account as default', error),
         null,
         StatusCodes.INTERNAL_SERVER_ERROR,
         ErrorCode.UNKNOWN_500

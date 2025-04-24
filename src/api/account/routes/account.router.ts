@@ -127,5 +127,20 @@ export const accountRouter: Router = (() => {
   });
   router.delete('/:id', authenticate, accountController.deleteAccount);
 
+  accountRegistry.registerPath({
+    method: Method.PATCH,
+    path: '/api/account/default/:id',
+    tags: [Module.ACCOUNT],
+    summary: 'Set an account as default',
+    responses: createApiResponses([
+      {
+        schema: NullResponseSchema,
+        statusCode: StatusCodes.OK,
+      },
+    ]),
+    parameters: idParamExample('Account ID'),
+  });
+  router.patch('/default/:id', authenticate, accountController.setDefaultAccount);
+
   return router;
 })();

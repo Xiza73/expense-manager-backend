@@ -58,6 +58,9 @@ export class Account {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  isDefault: boolean;
+
   @OneToMany(() => Transaction, (transaction) => transaction.account, {})
   transactions: Transaction[];
 

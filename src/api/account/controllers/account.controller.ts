@@ -64,4 +64,14 @@ export const accountController = {
       handleControllerError(error, res);
     }
   },
+
+  setDefaultAccount: async (req: Request, res: Response) => {
+    try {
+      const serviceResponse = await accountService.setDefaultAccount(req.decodedUser, Number(req.params.id));
+
+      handleServiceResponse(serviceResponse, res);
+    } catch (error) {
+      handleControllerError(error, res);
+    }
+  },
 };
