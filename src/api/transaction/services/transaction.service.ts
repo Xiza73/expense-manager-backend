@@ -167,8 +167,10 @@ export const transactionService = {
         );
       }
 
-      if (data.date) {
-        if (isNaN(data.date.getTime())) {
+      let { date: toCreateDate } = data;
+
+      if (toCreateDate) {
+        if (isNaN(toCreateDate.getTime())) {
           return new ServiceResponse(
             ResponseStatus.Failed,
             'Invalid date',
@@ -177,6 +179,27 @@ export const transactionService = {
             ErrorCode.UNKNOWN_400
           );
         }
+
+        toCreateDate = new Date(toCreateDate);
+      } else {
+        toCreateDate = new Date();
+      }
+
+      const accountDate = new Date(existingAccount.date);
+      const toCreateMonth = toCreateDate.getMonth();
+      const accountMonth = accountDate.getMonth();
+      const toCreateYear = toCreateDate.getFullYear();
+      const accountYear = accountDate.getFullYear();
+      const isOutOfDate = toCreateMonth !== accountMonth || toCreateYear !== accountYear;
+
+      if (isOutOfDate) {
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'Transaction date should be in the same month and year as the account',
+          null,
+          StatusCodes.BAD_REQUEST,
+          ErrorCode.TRANSACTION_DATE_OUT_OF_DATE_400
+        );
       }
 
       const newTransaction = transactionRepository.create({
@@ -186,11 +209,7 @@ export const transactionService = {
           : {
               description: undefined,
             }),
-        ...(data.date
-          ? { date: data.date }
-          : {
-              date: new Date(),
-            }),
+        date: toCreateDate,
         category_id: data.categoryId,
         service_id: data.serviceId,
         account_id: data.accountId,

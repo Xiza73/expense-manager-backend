@@ -17,6 +17,7 @@ export const GetAccountResponseObject = z.object({
   balance: commonValidations.toValidNumber,
   expenseAmount: commonValidations.toValidNumber,
   incomeAmount: commonValidations.toValidNumber,
+  date: z.date(),
   color: z.string().nullable(),
 });
 type GetAccountResponseObject = zod.infer<typeof GetAccountResponseObject>;
