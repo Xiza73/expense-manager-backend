@@ -17,7 +17,7 @@ export const GetAccountResponseObject = z.object({
   balance: commonValidations.toValidNumber,
   expenseAmount: commonValidations.toValidNumber,
   incomeAmount: commonValidations.toValidNumber,
-  date: z.date(),
+  date: commonValidations.toValidDateWithoutTimezone,
   isDefault: z.boolean(),
   color: z.string().nullable(),
 });

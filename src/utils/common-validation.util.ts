@@ -37,6 +37,12 @@ export const commonValidations = {
       return new Date(value);
     }),
 
+  toValidDateWithoutTimezone: z.date().transform((value) => {
+    const dateWithoutTimezone = value.toISOString().split('.')[0];
+
+    return dateWithoutTimezone;
+  }),
+
   paymentMethod: z.nativeEnum(PaymentMethod, {
     errorMap: () => ({ message: 'Payment method is required' }),
   }),
