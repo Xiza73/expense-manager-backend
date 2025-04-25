@@ -1,9 +1,13 @@
 import {
+  AfterInsert,
+  AfterUpdate,
+  BeforeRemove,
   Column,
   CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
+  Not,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -11,6 +15,7 @@ import {
 import { Currency } from '@/api/account/domain/currency.enum';
 import { Account } from '@/api/account/entities/account.entity';
 import { AuthToken } from '@/api/auth/entities/auth-token.entity';
+import { AppDataSource } from '@/data-source';
 
 import { PaymentMethod } from '../domain/payment-method.enum';
 import { TransactionType } from '../domain/transaction-type.enum';
@@ -85,4 +90,56 @@ export class Transaction {
 
   @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
+
+  private async updateAccount(isDeleted: boolean = false) {
+    const transactionRepo = AppDataSource.getRepository(Transaction);
+    const accountRepo = AppDataSource.getRepository(Account);
+
+    const transactions = await transactionRepo.find({
+      where: { account_id: this.account_id, id: Not(this.id) },
+    });
+
+    const account = await accountRepo.findOneBy({ id: this.account_id });
+
+    if (!account) return;
+
+    const thisExpenseAmount = this.type === TransactionType.EXPENSE ? Number(this.amount) : 0;
+    const thisIncomeAmount = this.type === TransactionType.INCOME ? Number(this.amount) : 0;
+
+    let expenseAmount = transactions.reduce(
+      (sum, t) => sum + (t.type === TransactionType.EXPENSE ? Number(t.amount) : 0),
+      0
+    );
+    let incomeAmount = transactions.reduce(
+      (sum, t) => sum + (t.type === TransactionType.INCOME ? Number(t.amount) : 0),
+      0
+    );
+
+    if (!isDeleted) {
+      expenseAmount += thisExpenseAmount;
+      incomeAmount += thisIncomeAmount;
+    }
+
+    expenseAmount = Math.round(expenseAmount * 100) / 100;
+    incomeAmount = Math.round(incomeAmount * 100) / 100;
+
+    const balance = Math.round((Number(account.amount) - expenseAmount + incomeAmount) * 100) / 100;
+
+    await accountRepo.update(this.account_id, { balance, expenseAmount, incomeAmount });
+  }
+
+  @AfterInsert()
+  async afterInsert() {
+    await this.updateAccount();
+  }
+
+  @AfterUpdate()
+  async afterUpdate() {
+    await this.updateAccount();
+  }
+
+  @BeforeRemove()
+  async beforeRemove() {
+    await this.updateAccount(true);
+  }
 }

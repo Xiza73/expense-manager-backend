@@ -6,9 +6,8 @@ export const handleErrorMessage = (prefix: string, error: any): string => {
       const errMessage = errArray
         .reduce((acc: string[], curr: any) => {
           const message = curr.message;
-          const path = curr.path[2] ? curr.path[2] : curr.path[1];
 
-          return [...acc, `${path}: ${message}`];
+          return [...acc, `${curr.path.join('.')}: ${message}`];
         }, [])
         .join(' | ');
 

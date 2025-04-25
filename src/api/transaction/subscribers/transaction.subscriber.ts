@@ -39,7 +39,7 @@ export class TransactionSubscriber implements EntitySubscriberInterface<Transact
       expenseAmount = Math.round(expenseAmount * 100) / 100;
       incomeAmount = Math.round(incomeAmount * 100) / 100;
 
-      const newAccount: Account = {
+      const newAccount: Partial<Account> = {
         ...account,
         balance,
         expenseAmount,
@@ -97,7 +97,7 @@ export class TransactionSubscriber implements EntitySubscriberInterface<Transact
       expenseAmount = Math.round(expenseAmount * 100) / 100;
       incomeAmount = Math.round(incomeAmount * 100) / 100;
 
-      const newAccount: Account = {
+      const newAccount: Partial<Account> = {
         ...account,
         balance,
         expenseAmount,
@@ -140,7 +140,7 @@ export class TransactionSubscriber implements EntitySubscriberInterface<Transact
       expenseAmount = Math.round(expenseAmount * 100) / 100;
       incomeAmount = Math.round(incomeAmount * 100) / 100;
 
-      const newAccount: Account = {
+      const newAccount: Partial<Account> = {
         ...account,
         balance,
         expenseAmount,
