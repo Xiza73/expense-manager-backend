@@ -1,5 +1,13 @@
 export const handleErrorMessage = (prefix: string, error: any): string => {
   try {
+    if (error instanceof Error) {
+      if (error.message.includes('numeric field overflow')) {
+        return `${prefix}: Amount is too high`;
+      }
+
+      return `${prefix}: ${error.message}`;
+    }
+
     if (Array.isArray(JSON.parse(error))) {
       const errArray: any[] = JSON.parse(error);
 
@@ -13,7 +21,6 @@ export const handleErrorMessage = (prefix: string, error: any): string => {
 
       return `${prefix}: ${errMessage}`;
     }
-    if (error instanceof Error) return `${prefix}: ${error.message}`;
 
     return prefix;
   } catch (error) {
