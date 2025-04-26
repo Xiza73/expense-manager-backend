@@ -169,21 +169,7 @@ export const transactionService = {
 
       let { date: toCreateDate } = data;
 
-      if (toCreateDate) {
-        if (isNaN(toCreateDate.getTime())) {
-          return new ServiceResponse(
-            ResponseStatus.Failed,
-            'Invalid date',
-            null,
-            StatusCodes.BAD_REQUEST,
-            ErrorCode.UNKNOWN_400
-          );
-        }
-
-        toCreateDate = new Date(toCreateDate);
-      } else {
-        toCreateDate = new Date();
-      }
+      if (!toCreateDate) toCreateDate = new Date();
 
       const accountDate = new Date(existingAccount.date);
       const toCreateMonth = toCreateDate.getMonth();

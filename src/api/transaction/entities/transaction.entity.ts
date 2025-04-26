@@ -42,7 +42,7 @@ export class Transaction {
   @Column({ type: 'enum', enum: TransactionType })
   type: TransactionType;
 
-  @Column({ type: 'timestamp with time zone' })
+  @Column({ type: 'timestamp without time zone' })
   date: Date;
 
   @Column({ type: 'enum', enum: PaymentMethod })
