@@ -4,9 +4,8 @@ import { AuthToken } from '@/api/auth/entities/auth-token.entity';
 import { ErrorCode, SuccessCode } from '@/domain/code-mapper.map';
 import { NullResponse } from '@/domain/responses/null.response';
 import { ResponseStatus, ServiceResponse } from '@/domain/service-response.model';
-import { handleErrorMessage } from '@/utils/error.util';
+import { handleErrorMessage, handleServiceError } from '@/utils/error.util';
 
-import { MonthOrder } from '../domain/month.enum';
 import { CreateAccountRequestObject } from '../domain/requests/create-account.request';
 import { GetAccountsRequestObject } from '../domain/requests/get-accounts.request';
 import { UpdateAccountRequestObject } from '../domain/requests/update-account.request';
@@ -14,6 +13,7 @@ import { CreateAccountResponse, CreateAccountResponseObject } from '../domain/re
 import { GetAccountResponse, GetAccountResponseObject } from '../domain/responses/get-account.response';
 import { GetAccountsResponse, GetAccountsResponseObject } from '../domain/responses/get-accounts.response';
 import { accountRepository } from '../repositories/account.repository';
+import { accountServiceUtil } from './utils/account.service.util';
 
 export const accountService = {
   getAccounts: async (
@@ -139,57 +139,9 @@ export const accountService = {
 
   createAccount: async (user: AuthToken, data: CreateAccountRequestObject): Promise<CreateAccountResponse> => {
     try {
-      const existingAccount = await accountRepository.findOneBy({
-        user_id: user.id,
-        month: data.month,
-        year: data.year,
-      });
+      await accountServiceUtil.validateNotExistAccount(user.id, data.month, data.year);
 
-      if (existingAccount) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Account already exists for this month and year',
-          null,
-          StatusCodes.BAD_REQUEST,
-          ErrorCode.ACCOUNT_ALREADY_EXISTS_400
-        );
-      }
-
-      let isDefault = false;
-
-      const latestAccount = (
-        await accountRepository.find({
-          where: { user_id: user.id },
-          order: {
-            date: 'DESC',
-          },
-          take: 1,
-        })
-      )?.[0];
-
-      if (!latestAccount) {
-        isDefault = true;
-      }
-
-      if (latestAccount?.isDefault) {
-        const latestAccountDate = new Date(latestAccount.date);
-        const newAccountDate = new Date(`${data.year}-${MonthOrder[data.month]}-01`);
-        const latestAccountMonth = latestAccountDate.getMonth();
-        const newAccountMonth = newAccountDate.getMonth();
-        const latestAccountYear = latestAccountDate.getFullYear();
-        const newAccountYear = newAccountDate.getFullYear();
-
-        if (
-          newAccountMonth > latestAccountMonth ||
-          (newAccountMonth === latestAccountMonth && newAccountYear > latestAccountYear)
-        ) {
-          accountRepository.update(latestAccount.id, {
-            isDefault: false,
-          });
-
-          isDefault = true;
-        }
-      }
+      const isDefault = await accountServiceUtil.getIsDefaultAccount(user.id, data.month, data.year);
 
       const newAccount = accountRepository.create({
         ...data,
@@ -212,13 +164,7 @@ export const accountService = {
         SuccessCode.SUCCESS_201
       );
     } catch (error) {
-      return new ServiceResponse(
-        ResponseStatus.Failed,
-        handleErrorMessage('Failed to recognize text', error),
-        null,
-        StatusCodes.INTERNAL_SERVER_ERROR,
-        ErrorCode.UNKNOWN_500
-      );
+      return handleServiceError('Failed on create account', error);
     }
   },
 
@@ -228,48 +174,15 @@ export const accountService = {
     data: UpdateAccountRequestObject
   ): Promise<NullResponse> => {
     try {
-      const existingAccount = await accountRepository.findOneBy({ id: accountId, user_id: user.id });
+      const existingAccount = await accountServiceUtil.getExistingAccount(accountId, user.id);
 
-      if (!existingAccount) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Account not found',
-          null,
-          StatusCodes.NOT_FOUND,
-          ErrorCode.ACCOUNT_NOT_FOUND_404
-        );
-      }
+      await accountServiceUtil.validateUpdateDateAccount(existingAccount, data.month, data.year);
 
-      if (data.month !== existingAccount.month || data.year !== existingAccount.year) {
-        const existingAccountForMonth = await accountRepository.findOneBy({
-          user_id: user.id,
-          month: data.month,
-          year: data.year,
-        });
-
-        if (existingAccountForMonth) {
-          return new ServiceResponse(
-            ResponseStatus.Failed,
-            'Account already exists for this month and year',
-            null,
-            StatusCodes.BAD_REQUEST,
-            ErrorCode.ACCOUNT_ALREADY_EXISTS_400
-          );
-        }
-      }
-
-      if (data.currency !== existingAccount.currency) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Currency cannot be changed',
-          null,
-          StatusCodes.BAD_REQUEST,
-          ErrorCode.ACCOUNT_CANNOT_CHANGE_CURRENCY_400
-        );
-      }
+      await accountServiceUtil.validateUpdateCurrencyAccount(existingAccount, data.currency);
 
       existingAccount.balance = Number(existingAccount.balance) + Number(data.amount) - Number(existingAccount.amount);
       existingAccount.amount = data.amount;
+      existingAccount.currency = data.currency;
       existingAccount.color = data.color || null;
       existingAccount.description = data.description || null;
       existingAccount.month = data.month;
@@ -285,13 +198,7 @@ export const accountService = {
         SuccessCode.SUCCESS_200
       );
     } catch (error) {
-      return new ServiceResponse(
-        ResponseStatus.Failed,
-        handleErrorMessage('Failed to update account', error),
-        null,
-        StatusCodes.INTERNAL_SERVER_ERROR,
-        ErrorCode.UNKNOWN_500
-      );
+      return handleServiceError('Failed to update account', error);
     }
   },
 
