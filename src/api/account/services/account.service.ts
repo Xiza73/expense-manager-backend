@@ -1,7 +1,6 @@
 import { StatusCodes } from 'http-status-codes';
 
 import { AuthToken } from '@/api/auth/entities/auth-token.entity';
-import { AppDataSource } from '@/data-source';
 import { ErrorCode, SuccessCode } from '@/domain/code-mapper.map';
 import { NullResponse } from '@/domain/responses/null.response';
 import { ResponseStatus, ServiceResponse } from '@/domain/service-response.model';
@@ -14,9 +13,7 @@ import { UpdateAccountRequestObject } from '../domain/requests/update-account.re
 import { CreateAccountResponse, CreateAccountResponseObject } from '../domain/responses/create-account.response';
 import { GetAccountResponse, GetAccountResponseObject } from '../domain/responses/get-account.response';
 import { GetAccountsResponse, GetAccountsResponseObject } from '../domain/responses/get-accounts.response';
-import { Account } from '../entities/account.entity';
-
-export const accountRepository = AppDataSource.getRepository(Account);
+import { accountRepository } from '../repositories/account.repository';
 
 export const accountService = {
   getAccounts: async (

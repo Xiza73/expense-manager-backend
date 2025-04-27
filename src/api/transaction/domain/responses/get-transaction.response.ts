@@ -26,6 +26,9 @@ export const GetTransactionResponseObject = z.object({
     id: z.number(),
     name: z.string(),
   }),
+  account: z.object({
+    id: z.number(),
+  }),
 });
 type GetTransactionResponseObject = zod.infer<typeof GetTransactionResponseObject>;
 
