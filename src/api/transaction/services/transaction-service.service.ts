@@ -13,7 +13,7 @@ import {
   GetTransactionServicesResponse,
   GetTransactionServicesResponseObject,
 } from '../domain/responses/get-transaction-services.response';
-import { transactionServiceRepository } from './transaction.service';
+import { transactionServiceRepository } from '../repositories/transaction-service.repository';
 
 export const transactionServiceService = {
   getTransactionServices: async (user: AuthToken): Promise<GetTransactionServicesResponse> => {

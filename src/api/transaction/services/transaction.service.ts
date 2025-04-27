@@ -1,25 +1,21 @@
 import { StatusCodes } from 'http-status-codes';
 
-import { accountRepository } from '@/api/account/services/account.service';
+import { accountServiceUtil } from '@/api/account/services/utils/account.service.util';
 import { AuthToken } from '@/api/auth/entities/auth-token.entity';
-import { AppDataSource } from '@/data-source';
 import { ErrorCode, SuccessCode } from '@/domain/code-mapper.map';
 import { NullResponse } from '@/domain/responses/null.response';
 import { ResponseStatus, ServiceResponse } from '@/domain/service-response.model';
-import { handleErrorMessage } from '@/utils/error.util';
+import { handleErrorMessage, handleServiceError } from '@/utils/error.util';
 
 import { CreateTransactionRequestObject } from '../domain/requests/create-transaction.request';
 import { GetTransactionsRequestObject } from '../domain/requests/get-transactions.request';
 import { UpdateTransactionRequestObject } from '../domain/requests/update-transaction.request';
 import { GetTransactionResponse, GetTransactionResponseObject } from '../domain/responses/get-transaction.response';
 import { GetTransactionsResponse, GetTransactionsResponseObject } from '../domain/responses/get-transactions.response';
-import { Transaction } from '../entities/transaction.entity';
-import { TransactionCategory } from '../entities/transaction-category.entity';
-import { TransactionService } from '../entities/transaction-service.entity';
-
-export const transactionRepository = AppDataSource.getRepository(Transaction);
-export const transactionCategoryRepository = AppDataSource.getRepository(TransactionCategory);
-export const transactionServiceRepository = AppDataSource.getRepository(TransactionService);
+import { transactionRepository } from '../repositories/transaction.repository';
+import { transactionServiceUtil } from './utils/transaction.service.util';
+import { transactionCategoryServiceUtil } from './utils/transaction-category.service.util';
+import { transactionServiceServiceUtil } from './utils/transaction-service.service.util';
 
 export const transactionService = {
   getTransactions: async (
@@ -117,76 +113,20 @@ export const transactionService = {
 
   createTransaction: async (user: AuthToken, data: CreateTransactionRequestObject): Promise<NullResponse> => {
     try {
-      const existingAccount = await accountRepository.findOneBy({ id: data.accountId, user_id: user.id });
-
-      if (!existingAccount) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Account not found',
-          null,
-          StatusCodes.NOT_FOUND,
-          ErrorCode.ACCOUNT_NOT_FOUND_404
-        );
-      }
+      const existingAccount = await accountServiceUtil.getExistingAccount(data.accountId, user.id);
 
       // const existingSettings = await settingsRepository.findOneBy({ user_id: user.id });
 
       // if (existingAccount.currency !== currency && !existingSettings?.exchangeRate) {
-      if (existingAccount.currency !== data.currency) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          // 'You need to set up your exchange rate',
-          'Please select a account with the same currency',
-          null,
-          StatusCodes.NOT_FOUND,
-          ErrorCode.SETTINGS_NOT_FOUND_404
-        );
-      }
+      accountServiceUtil.validateCurrencyAccount(existingAccount, data.currency);
 
-      const existingCategory = await transactionCategoryRepository.findOneBy({ id: data.categoryId, user_id: user.id });
+      await transactionCategoryServiceUtil.getExistingTransactionCategory(data.categoryId, user.id);
 
-      if (!existingCategory) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Category not found',
-          null,
-          StatusCodes.NOT_FOUND,
-          ErrorCode.TRAN_CATEGORY_NOT_FOUND_404
-        );
-      }
+      await transactionServiceServiceUtil.getExistingTransactionService(data.serviceId, user.id);
 
-      const existingService = await transactionServiceRepository.findOneBy({ id: data.serviceId, user_id: user.id });
+      const { date: toCreateDate } = data;
 
-      if (!existingService) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Service not found',
-          null,
-          StatusCodes.NOT_FOUND,
-          ErrorCode.TRAN_SERVICE_NOT_FOUND_404
-        );
-      }
-
-      let { date: toCreateDate } = data;
-
-      if (!toCreateDate) toCreateDate = new Date();
-
-      const accountDate = new Date(existingAccount.date);
-      const toCreateMonth = toCreateDate.getMonth();
-      const accountMonth = accountDate.getMonth();
-      const toCreateYear = toCreateDate.getFullYear();
-      const accountYear = accountDate.getFullYear();
-      const isOutOfDate = toCreateMonth !== accountMonth || toCreateYear !== accountYear;
-
-      if (isOutOfDate) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Transaction date should be in the same month and year as the account',
-          null,
-          StatusCodes.BAD_REQUEST,
-          ErrorCode.TRANSACTION_DATE_OUT_OF_DATE_400
-        );
-      }
+      transactionServiceUtil.validateDateRange(existingAccount.date, toCreateDate);
 
       const newTransaction = transactionRepository.create({
         ...data,
@@ -228,106 +168,25 @@ export const transactionService = {
     data: UpdateTransactionRequestObject
   ): Promise<NullResponse> => {
     try {
-      const existingTransaction = await transactionRepository.findOneBy({ id: transactionId, user_id: user.id });
+      const existingTransaction = await transactionServiceUtil.getExistingTransaction(transactionId, user.id);
 
-      if (!existingTransaction) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Transaction not found',
-          null,
-          StatusCodes.NOT_FOUND,
-          ErrorCode.TRANSACTION_NOT_FOUND_404
-        );
-      }
-
-      const existingAccount = await accountRepository.findOneBy({ id: data.accountId, user_id: user.id });
-
-      if (!existingAccount) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Account not found',
-          null,
-          StatusCodes.NOT_FOUND,
-          ErrorCode.ACCOUNT_NOT_FOUND_404
-        );
-      }
+      const existingAccount = await accountServiceUtil.getExistingAccount(data.accountId, user.id);
 
       // const existingSettings = await settingsRepository.findOneBy({ user_id: user.id });
 
       // if (existingAccount.currency !== currency && !existingSettings?.exchangeRate) {
-      if (existingAccount.currency !== data.currency) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          // 'You need to set up your exchange rate',
-          'Please select a account with the same currency',
-          null,
-          StatusCodes.NOT_FOUND,
-          ErrorCode.SETTINGS_NOT_FOUND_404
-        );
-      }
+      accountServiceUtil.validateCurrencyAccount(existingAccount, data.currency);
 
-      let { date: toCreateDate } = data;
+      await transactionCategoryServiceUtil.getExistingTransactionCategory(data.categoryId, user.id);
 
-      if (toCreateDate) {
-        if (isNaN(toCreateDate.getTime())) {
-          return new ServiceResponse(
-            ResponseStatus.Failed,
-            'Invalid date',
-            null,
-            StatusCodes.BAD_REQUEST,
-            ErrorCode.UNKNOWN_400
-          );
-        }
+      await transactionServiceServiceUtil.getExistingTransactionService(data.serviceId, user.id);
 
-        toCreateDate = new Date(toCreateDate);
-      } else {
-        toCreateDate = new Date();
-      }
+      const { date: toCreateDate } = data;
 
-      const accountDate = new Date(existingAccount.date);
-      const toCreateMonth = toCreateDate.getMonth();
-      const accountMonth = accountDate.getMonth();
-      const toCreateYear = toCreateDate.getFullYear();
-      const accountYear = accountDate.getFullYear();
-      const isOutOfDate = toCreateMonth !== accountMonth || toCreateYear !== accountYear;
-
-      if (isOutOfDate) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Transaction date should be in the same month and year as the account',
-          null,
-          StatusCodes.BAD_REQUEST,
-          ErrorCode.TRANSACTION_DATE_OUT_OF_DATE_400
-        );
-      }
-
-      const existingCategory = await transactionCategoryRepository.findOneBy({ id: data.categoryId, user_id: user.id });
-
-      if (!existingCategory) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Category not found',
-          null,
-          StatusCodes.NOT_FOUND,
-          ErrorCode.TRAN_CATEGORY_NOT_FOUND_404
-        );
-      }
-
-      const existingService = await transactionServiceRepository.findOneBy({ id: data.serviceId, user_id: user.id });
-
-      if (!existingService) {
-        return new ServiceResponse(
-          ResponseStatus.Failed,
-          'Service not found',
-          null,
-          StatusCodes.NOT_FOUND,
-          ErrorCode.TRAN_SERVICE_NOT_FOUND_404
-        );
-      }
+      transactionServiceUtil.validateDateRange(existingAccount.date, toCreateDate);
 
       existingTransaction.amount = data.amount;
       existingTransaction.category_id = data.categoryId;
-      existingTransaction.isActive = data.isActive;
       existingTransaction.name = data.name;
       existingTransaction.date = data.date;
       existingTransaction.type = data.type;
@@ -346,13 +205,7 @@ export const transactionService = {
         SuccessCode.SUCCESS_200
       );
     } catch (error) {
-      return new ServiceResponse(
-        ResponseStatus.Failed,
-        handleErrorMessage('Failed to update transaction', error),
-        null,
-        StatusCodes.INTERNAL_SERVER_ERROR,
-        ErrorCode.UNKNOWN_500
-      );
+      return handleServiceError('Failed to update transaction', error);
     }
   },
 

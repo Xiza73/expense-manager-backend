@@ -13,7 +13,7 @@ import {
   GetTransactionCategoriesResponse,
   GetTransactionCategoriesResponseObject,
 } from '../domain/responses/get-transaction-categories.response';
-import { transactionCategoryRepository } from './transaction.service';
+import { transactionCategoryRepository } from '../repositories/transaction-category.repository';
 
 export const transactionCategoryService = {
   getTransactionCategories: async (user: AuthToken): Promise<GetTransactionCategoriesResponse> => {
