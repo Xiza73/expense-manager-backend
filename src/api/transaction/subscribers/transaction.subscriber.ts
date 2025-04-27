@@ -1,13 +1,13 @@
 import { EntitySubscriberInterface, EventSubscriber, InsertEvent, RemoveEvent, UpdateEvent } from 'typeorm';
 
 import { Account } from '@/api/account/entities/account.entity';
-import { accountRepository } from '@/api/account/services/account.service';
+import { accountRepository } from '@/api/account/repositories/account.repository';
 import { Transaction } from '@/api/transaction/entities/transaction.entity';
 import { logger } from '@/config/logger.config';
 import { handleErrorMessage } from '@/utils/error.util';
 
 import { TransactionType } from '../domain/transaction-type.enum';
-import { transactionRepository } from '../services/transaction.service';
+import { transactionRepository } from '../repositories/transaction.repository';
 
 @EventSubscriber()
 export class TransactionSubscriber implements EntitySubscriberInterface<Transaction> {
