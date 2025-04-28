@@ -24,8 +24,8 @@ export class TransactionService {
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
-  @Column({ type: 'int', nullable: false })
-  user_id: number;
+  @Column({ type: 'int', nullable: true })
+  user_id?: number;
 
   @OneToMany(() => Transaction, (transaction) => transaction.service, {})
   transactions: Transaction[];
@@ -34,5 +34,5 @@ export class TransactionService {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
-  user: AuthToken;
+  user?: AuthToken;
 }

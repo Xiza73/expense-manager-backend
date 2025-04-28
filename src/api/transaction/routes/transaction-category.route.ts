@@ -2,7 +2,7 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
-import { authenticate } from '@/api/auth/middlewares/auth.middleware';
+import { adminOnly, authenticate } from '@/api/auth/middlewares/auth.middleware';
 import { createApiResponses } from '@/config/api-docs/openAPIResponseBuilders';
 import { NullResponseSchema } from '@/domain/responses/null.response';
 import { Method, Module } from '@/domain/route.enum';
@@ -53,7 +53,8 @@ export const transactionCategoryRouter: Router = (() => {
   });
   router.post(
     '/',
-    authenticate,
+    // TODO: Add adminOnly for now, will be removed later on premium plan
+    adminOnly,
     validateRequest(CreateTransactionCategoryRequestSchema),
     transactionCategoryController.createTransactionCategory
   );
@@ -92,7 +93,8 @@ export const transactionCategoryRouter: Router = (() => {
   });
   router.put(
     '/:id',
-    authenticate,
+    // TODO: Add adminOnly for now, will be removed later on premium plan
+    adminOnly,
     validateRequest(UpdateTransactionCategoryRequestSchema),
     transactionCategoryController.updateTransactionCategory
   );
@@ -120,7 +122,12 @@ export const transactionCategoryRouter: Router = (() => {
       },
     ],
   });
-  router.delete('/:id', authenticate, transactionCategoryController.deleteTransactionCategory);
+  router.delete(
+    '/:id',
+    // TODO: Add adminOnly for now, will be removed later on premium plan
+    adminOnly,
+    transactionCategoryController.deleteTransactionCategory
+  );
 
   return router;
 })();

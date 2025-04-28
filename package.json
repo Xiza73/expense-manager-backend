@@ -1,6 +1,6 @@
 {
   "name": "expense-manager",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -47,6 +47,7 @@
     "reflect-metadata": "^0.2.2",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.22",
+    "typeorm-extension": "^3.7.1",
     "zod": "^3.24.1"
   },
   "devDependencies": {

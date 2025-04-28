@@ -1,3 +1,5 @@
+import { runSeeders } from 'typeorm-extension';
+
 import { env } from './config/env.config';
 import { logger } from './config/logger.config';
 import { app } from './config/server.config';
@@ -7,6 +9,8 @@ import { handleErrorMessage } from './utils/error.util';
 AppDataSource.initialize()
   .then(async () => {
     logger.info('Data Source has been initialized!');
+
+    await runSeeders(AppDataSource);
 
     const server = app.listen(env.PORT, () => {
       const { NODE_ENV, HOST, PORT } = env;
