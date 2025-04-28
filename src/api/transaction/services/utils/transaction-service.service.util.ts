@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import { Equal, IsNull, Or } from 'typeorm';
 
 import { ErrorCode } from '@/domain/code-mapper.map';
 import { ResponseStatus, ServiceResponse } from '@/domain/service-response.model';
@@ -7,7 +8,10 @@ import { transactionServiceRepository } from '../../repositories/transaction-ser
 
 export const transactionServiceServiceUtil = {
   getExistingTransactionService: async (serviceId: number, userId: number) => {
-    const existingService = await transactionServiceRepository.findOneBy({ id: serviceId, user_id: userId });
+    const existingService = await transactionServiceRepository.findOneBy({
+      id: serviceId,
+      user_id: Or(Equal(userId), IsNull()),
+    });
 
     if (!existingService) {
       throw new ServiceResponse(

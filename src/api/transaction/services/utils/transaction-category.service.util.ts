@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import { Equal, IsNull, Or } from 'typeorm';
 
 import { ErrorCode } from '@/domain/code-mapper.map';
 import { ResponseStatus, ServiceResponse } from '@/domain/service-response.model';
@@ -7,7 +8,10 @@ import { transactionCategoryRepository } from '../../repositories/transaction-ca
 
 export const transactionCategoryServiceUtil = {
   getExistingTransactionCategory: async (categoryId: number, userId: number) => {
-    const existingCategory = await transactionCategoryRepository.findOneBy({ id: categoryId, user_id: userId });
+    const existingCategory = await transactionCategoryRepository.findOneBy({
+      id: categoryId,
+      user_id: Or(Equal(userId), IsNull()),
+    });
 
     if (!existingCategory) {
       throw new ServiceResponse(

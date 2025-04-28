@@ -1,5 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
-import { Not } from 'typeorm';
+import { IsNull, Not } from 'typeorm';
 
 import { AuthToken } from '@/api/auth/entities/auth-token.entity';
 import { ErrorCode, SuccessCode } from '@/domain/code-mapper.map';
@@ -19,7 +19,12 @@ export const transactionCategoryService = {
   getTransactionCategories: async (user: AuthToken): Promise<GetTransactionCategoriesResponse> => {
     try {
       const transactionCategories = await transactionCategoryRepository.find({
-        where: { user_id: user.id },
+        where: [
+          { user_id: user.id },
+          {
+            user_id: IsNull(),
+          },
+        ],
         order: { name: 'ASC' },
       });
 
