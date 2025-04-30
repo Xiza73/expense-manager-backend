@@ -4,8 +4,8 @@ import { commonValidations } from '@/utils/common-validation.util';
 import { Parameters } from './parameter.interface';
 
 export const ListSchemaQuery = z.object({
-  page: commonValidations.toValidNumber.default(1),
-  limit: commonValidations.toValidNumber.default(10),
+  page: commonValidations.optionalNumber,
+  limit: commonValidations.optionalNumber,
 });
 
 export const ListRequestParameters: Parameters = [

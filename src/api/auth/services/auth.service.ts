@@ -6,7 +6,7 @@ import { ResponseStatus, ServiceResponse } from '@/domain/service-response.model
 import { handleErrorMessage } from '@/utils/error.util';
 
 import { CreateUserResponse } from '../domain/responses/create-user.response';
-import { SignInResponse } from '../domain/responses/sign-in.response';
+import { SignInResponse, SignInResponseObject } from '../domain/responses/sign-in.response';
 import { AuthToken } from '../entities/auth-token.entity';
 
 const authTokenRepository = AppDataSource.getRepository(AuthToken);
@@ -61,10 +61,14 @@ export const authService = {
         );
       }
 
+      const response = SignInResponseObject.parse({
+        alias: existingUser.alias,
+      });
+
       return new ServiceResponse(
         ResponseStatus.Success,
         'User signed in successfully',
-        null,
+        response,
         StatusCodes.OK,
         SuccessCode.SUCCESS_200
       );
