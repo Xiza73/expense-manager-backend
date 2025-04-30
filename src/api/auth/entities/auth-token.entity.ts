@@ -13,6 +13,9 @@ export class AuthToken {
   @Column({ type: 'varchar', length: 255 })
   token: string;
 
+  @Column({ type: 'varchar', length: 255, default: '' })
+  alias: string;
+
   @Column({ type: 'boolean', default: false })
   isAdmin: boolean;
 
