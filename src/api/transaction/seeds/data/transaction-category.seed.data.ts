@@ -46,4 +46,9 @@ export const transactionCategorySeed: Partial<TransactionCategory>[] = [
     icon: 'investments',
     color: '#FFFF00',
   },
+  {
+    name: 'Other',
+    icon: 'other',
+    color: '#00FFFF',
+  },
 ];

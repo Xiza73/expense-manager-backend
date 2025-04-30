@@ -20,7 +20,7 @@ import { transactionServiceServiceUtil } from './utils/transaction-service.servi
 export const transactionService = {
   getTransactions: async (
     user: AuthToken,
-    { page = 1, limit = 10, accountId, categoryId, serviceId }: GetTransactionsRequestObject
+    { page, limit, accountId, categoryId, serviceId }: GetTransactionsRequestObject
   ): Promise<GetTransactionsResponse> => {
     try {
       const queryBuilder = transactionRepository
@@ -42,21 +42,23 @@ export const transactionService = {
         queryBuilder.andWhere('transaction.service_id = :serviceId', { serviceId });
       }
 
-      const transactionsResponse = await queryBuilder
-        .orderBy('transaction.date', 'DESC')
-        .take(limit)
-        .skip((page - 1) * limit)
-        .getManyAndCount();
+      queryBuilder.orderBy('transaction.date', 'DESC');
+
+      if (page && limit) {
+        queryBuilder.take(limit).skip((page - 1) * limit);
+      }
+
+      const transactionsResponse = await queryBuilder.getManyAndCount();
 
       const transactions = transactionsResponse[0];
       const total = transactionsResponse[1];
-      const pages = Math.ceil(total / limit);
+      const pages = limit ? Math.ceil(total / limit) : 1;
 
       const response = GetTransactionsResponseObject.parse({
         data: transactions,
         total,
         pages,
-        page,
+        page: page || 1,
       });
 
       return new ServiceResponse(

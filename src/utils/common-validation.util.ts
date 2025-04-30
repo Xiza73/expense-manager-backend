@@ -22,6 +22,25 @@ export const commonValidations = {
       return value;
     }),
 
+  optionalNumber: z
+    .any()
+    .refine(
+      (value) => {
+        if (!value) return true;
+        if (typeof value === 'number') return true;
+        if (typeof value === 'string') return !isNaN(parseFloat(value));
+        return false;
+      },
+      {
+        message: 'Value must be a number or a string that can be parsed to a number',
+      }
+    )
+    .transform((value) => {
+      if (typeof value === 'string') return parseFloat(value);
+
+      return value;
+    }),
+
   toValidDate: z
     .string()
     .refine(
