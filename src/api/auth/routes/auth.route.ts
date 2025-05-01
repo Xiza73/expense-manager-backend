@@ -3,11 +3,12 @@ import { Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 import { createApiResponses } from '@/config/api-docs/openAPIResponseBuilders';
+import { NullResponseSchema } from '@/domain/responses/null.response';
 import { Method, Module } from '@/domain/route.enum';
 import { validateRequest } from '@/utils/http-handlers.util';
 
 import { authController } from '../controllers/auth.controller';
-import { CreateUserRequestSchema } from '../domain/requests/create-user.request';
+import { CreateUserRequestExample, CreateUserRequestSchema } from '../domain/requests/create-user.request';
 import { SignInRequestSchema } from '../domain/requests/sign-in.request';
 import { CreateUserResponseSchema } from '../domain/responses/create-user.response';
 import { SignInResponseSchema } from '../domain/responses/sign-in.response';
@@ -31,14 +32,32 @@ export const authRouter: Router = (() => {
     requestBody: {
       content: {
         'application/json': {
-          example: {
-            token: 'string',
-          },
+          example: CreateUserRequestExample,
         },
       },
     },
   });
   router.post('/', adminOnly, validateRequest(CreateUserRequestSchema), authController.createUser);
+
+  authRegistry.registerPath({
+    method: Method.PUT,
+    path: '/api/auth/alias',
+    tags: [Module.AUTH],
+    responses: createApiResponses([
+      {
+        schema: NullResponseSchema,
+        statusCode: StatusCodes.OK,
+      },
+    ]),
+    requestBody: {
+      content: {
+        'application/json': {
+          example: CreateUserRequestExample,
+        },
+      },
+    },
+  });
+  router.put('/alias', adminOnly, validateRequest(CreateUserRequestSchema), authController.setAlias);
 
   authRegistry.registerPath({
     method: Method.POST,

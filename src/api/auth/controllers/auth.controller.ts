@@ -7,7 +7,17 @@ import { authService } from '../services/auth.service';
 export const authController = {
   createUser: async (req: Request, res: Response) => {
     try {
-      const serviceResponse = await authService.createUser(req.body.token);
+      const serviceResponse = await authService.createUser(req.body);
+
+      handleServiceResponse(serviceResponse, res);
+    } catch (error) {
+      handleControllerError(error, res);
+    }
+  },
+
+  setAlias: async (req: Request, res: Response) => {
+    try {
+      const serviceResponse = await authService.setAlias(req.body);
 
       handleServiceResponse(serviceResponse, res);
     } catch (error) {
