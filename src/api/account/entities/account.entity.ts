@@ -13,6 +13,7 @@ import {
 
 import { AuthToken } from '@/api/auth/entities/auth-token.entity';
 import { Transaction } from '@/api/transaction/entities/transaction.entity';
+import { daysInMonth } from '@/utils/date.util';
 
 import { Currency } from '../domain/currency.enum';
 import { Month, MonthOrder } from '../domain/month.enum';
@@ -52,6 +53,18 @@ export class Account {
   @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
   incomeAmount: number;
 
+  @Column({ type: 'numeric', precision: 10, scale: 2, default: 1 })
+  idealDailyExpenditure: number;
+
+  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
+  realDailyExpenditure: number;
+
+  @Column({ type: 'int', default: 0 })
+  realDaysSpent: number;
+
+  @Column({ type: 'int', default: 0 })
+  daysInDebt: number;
+
   @Column({ type: 'varchar', length: 255, nullable: true })
   color: string | null;
 
@@ -80,5 +93,11 @@ export class Account {
   @BeforeUpdate()
   updateDate() {
     this.date = new Date(`${this.year}-${MonthOrder[this.month]}-01`);
+  }
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  updateIdealDailyExpenditure() {
+    this.idealDailyExpenditure = this.amount / daysInMonth(MonthOrder[this.month], this.year);
   }
 }
