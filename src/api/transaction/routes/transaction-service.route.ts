@@ -2,7 +2,7 @@ import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
-import { adminOnly, authenticate } from '@/api/auth/middlewares/auth.middleware';
+import { authenticate } from '@/api/auth/middlewares/auth.middleware';
 import { createApiResponses } from '@/config/api-docs/openAPIResponseBuilders';
 import { NullResponseSchema } from '@/domain/responses/null.response';
 import { Method, Module } from '@/domain/route.enum';
@@ -53,8 +53,7 @@ export const transactionServiceRouter: Router = (() => {
   });
   router.post(
     '/',
-    // TODO: Add adminOnly for now, will be removed later on premium plan
-    adminOnly,
+    authenticate,
     validateRequest(CreateTransactionServiceRequestSchema),
     transactionServiceController.createTransactionService
   );
@@ -93,8 +92,7 @@ export const transactionServiceRouter: Router = (() => {
   });
   router.put(
     '/:id',
-    // TODO: Add adminOnly for now, will be removed later on premium plan
-    adminOnly,
+    authenticate,
     validateRequest(UpdateTransactionServiceRequestSchema),
     transactionServiceController.updateTransactionService
   );
@@ -122,12 +120,7 @@ export const transactionServiceRouter: Router = (() => {
       },
     ],
   });
-  router.delete(
-    '/:id',
-    // TODO: Add adminOnly for now, will be removed later on premium plan
-    adminOnly,
-    transactionServiceController.deleteTransactionService
-  );
+  router.delete('/:id', authenticate, transactionServiceController.deleteTransactionService);
 
   return router;
 })();

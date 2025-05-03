@@ -1,5 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
-import { IsNull, Not } from 'typeorm';
+import { Equal, IsNull, Not, Or } from 'typeorm';
 
 import { AuthToken } from '@/api/auth/entities/auth-token.entity';
 import { ErrorCode, SuccessCode } from '@/domain/code-mapper.map';
@@ -57,7 +57,7 @@ export const transactionServiceService = {
     try {
       const existingTransactionService = await transactionServiceRepository.findOneBy({
         name,
-        user_id: user.id,
+        user_id: Or(Equal(user.id), IsNull()),
       });
 
       if (existingTransactionService) {
@@ -171,7 +171,7 @@ export const transactionServiceService = {
         );
       }
 
-      await transactionServiceRepository.delete(existingTransactionService.id);
+      await transactionServiceRepository.softDelete(existingTransactionService.id);
 
       return new ServiceResponse(
         ResponseStatus.Success,
