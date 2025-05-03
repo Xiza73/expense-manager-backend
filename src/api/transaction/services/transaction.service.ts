@@ -9,7 +9,7 @@ import { copy } from '@/utils/copy.util';
 import { handleErrorMessage, handleServiceError } from '@/utils/error.util';
 
 import { CreateTransactionRequestObject } from '../domain/requests/create-transaction.request';
-import { GetTransactionsRequestObject } from '../domain/requests/get-transactions.request';
+import { GetTransactionsFieldOrder, GetTransactionsRequestObject } from '../domain/requests/get-transactions.request';
 import { UpdateTransactionRequestObject } from '../domain/requests/update-transaction.request';
 import { GetTransactionResponse, GetTransactionResponseObject } from '../domain/responses/get-transaction.response';
 import { GetTransactionsResponse, GetTransactionsResponseObject } from '../domain/responses/get-transactions.response';
@@ -21,7 +21,7 @@ import { transactionServiceServiceUtil } from './utils/transaction-service.servi
 export const transactionService = {
   getTransactions: async (
     user: AuthToken,
-    { page, limit, accountId, categoryId, serviceId }: GetTransactionsRequestObject
+    { page, limit, accountId, categoryId, serviceId, fieldOrder, order }: GetTransactionsRequestObject
   ): Promise<GetTransactionsResponse> => {
     try {
       const queryBuilder = transactionRepository
@@ -44,7 +44,14 @@ export const transactionService = {
         queryBuilder.andWhere('transaction.service_id = :serviceId', { serviceId });
       }
 
-      queryBuilder.orderBy('transaction.date', 'DESC');
+      if (fieldOrder && order) {
+        const sortByField = transactionServiceUtil.getSortByField(fieldOrder);
+
+        queryBuilder.orderBy(sortByField, order);
+        if (fieldOrder !== GetTransactionsFieldOrder.DATE) queryBuilder.addOrderBy('transaction.date', 'DESC');
+      } else {
+        queryBuilder.orderBy('transaction.date', 'DESC');
+      }
 
       if (page && limit) {
         queryBuilder.take(limit).skip((page - 1) * limit);
