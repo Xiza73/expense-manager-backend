@@ -5,6 +5,7 @@ import { AuthToken } from '@/api/auth/entities/auth-token.entity';
 import { ErrorCode, SuccessCode } from '@/domain/code-mapper.map';
 import { NullResponse } from '@/domain/responses/null.response';
 import { ResponseStatus, ServiceResponse } from '@/domain/service-response.model';
+import { copy } from '@/utils/copy.util';
 import { handleErrorMessage, handleServiceError } from '@/utils/error.util';
 
 import { CreateTransactionRequestObject } from '../domain/requests/create-transaction.request';
@@ -174,7 +175,7 @@ export const transactionService = {
     data: UpdateTransactionRequestObject
   ): Promise<NullResponse> => {
     try {
-      const existingTransaction = await transactionServiceUtil.getExistingTransaction(transactionId, user.id);
+      const existingTransaction = copy(await transactionServiceUtil.getExistingTransaction(transactionId, user.id));
 
       const existingAccount = await accountServiceUtil.getExistingAccount(data.accountId, user.id);
 
@@ -200,6 +201,9 @@ export const transactionService = {
       existingTransaction.description = data.description || undefined;
       existingTransaction.service_id = data.serviceId;
       existingTransaction.account_id = data.accountId;
+
+      delete existingTransaction.service;
+      delete existingTransaction.category;
 
       await transactionRepository.save(existingTransaction);
 
