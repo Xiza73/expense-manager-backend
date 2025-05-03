@@ -19,6 +19,7 @@ import { AppDataSource } from '@/data-source';
 
 import { PaymentMethod } from '../domain/payment-method.enum';
 import { TransactionType } from '../domain/transaction-type.enum';
+import { getCurrentAmounts, getDaysPassedInMonth } from '../utils/update-account.util';
 import { TransactionCategory } from './transaction-category.entity';
 import { TransactionService } from './transaction-service.entity';
 
@@ -105,35 +106,13 @@ export class Transaction {
 
     if (!account) return;
 
-    const thisExpenseAmount = this.type === TransactionType.EXPENSE ? Number(this.amount) : 0;
-    const thisIncomeAmount = this.type === TransactionType.INCOME ? Number(this.amount) : 0;
     const thisIdealDailyExpenditure = Number(account.idealDailyExpenditure);
 
-    let expenseAmount = transactions.reduce(
-      (sum, t) => sum + (t.type === TransactionType.EXPENSE ? Number(t.amount) : 0),
-      0
-    );
-    let incomeAmount = transactions.reduce(
-      (sum, t) => sum + (t.type === TransactionType.INCOME ? Number(t.amount) : 0),
-      0
-    );
-
-    if (!isDeleted) {
-      expenseAmount += thisExpenseAmount;
-      incomeAmount += thisIncomeAmount;
-    }
-
-    expenseAmount = Math.round(expenseAmount * 100) / 100;
-    incomeAmount = Math.round(incomeAmount * 100) / 100;
+    const { expenseAmount, incomeAmount } = getCurrentAmounts(transactions, this.amount, this.type, isDeleted);
 
     const totalExpenseAmount = expenseAmount - incomeAmount;
 
-    let lastDateFromTransactions = transactions.reduce(
-      (lastDate, t) => (t.date > lastDate ? t.date : lastDate),
-      new Date(1)
-    );
-    lastDateFromTransactions = lastDateFromTransactions > this.date ? lastDateFromTransactions : this.date;
-    const daysPassedInMonth = lastDateFromTransactions.getDate();
+    const daysPassedInMonth = getDaysPassedInMonth(transactions, this.date);
 
     const realDailyExpenditure = Math.round((totalExpenseAmount / daysPassedInMonth) * 100) / 100;
 
