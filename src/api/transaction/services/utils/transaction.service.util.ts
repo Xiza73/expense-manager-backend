@@ -3,7 +3,18 @@ import { StatusCodes } from 'http-status-codes';
 import { ErrorCode } from '@/domain/code-mapper.map';
 import { ResponseStatus, ServiceResponse } from '@/domain/service-response.model';
 
+import { GetTransactionsFieldOrder } from '../../domain/requests/get-transactions.request';
 import { transactionRepository } from '../../repositories/transaction.repository';
+
+const SortByField: { [key in GetTransactionsFieldOrder]: string } = {
+  [GetTransactionsFieldOrder.DATE]: 'transaction.date',
+  [GetTransactionsFieldOrder.NAME]: 'transaction.name',
+  [GetTransactionsFieldOrder.CATEGORY]: 'category.name',
+  [GetTransactionsFieldOrder.SERVICE]: 'service.name',
+  [GetTransactionsFieldOrder.PAYMENT_METHOD]: 'transaction.paymentMethod',
+  [GetTransactionsFieldOrder.TYPE]: 'transaction.type',
+  [GetTransactionsFieldOrder.AMOUNT]: 'transaction.amount',
+};
 
 export const transactionServiceUtil = {
   getExistingTransaction: async (transactionId: number, userId: number) => {
@@ -41,5 +52,9 @@ export const transactionServiceUtil = {
         ErrorCode.TRANSACTION_DATE_OUT_OF_DATE_400
       );
     }
+  },
+
+  getSortByField: (fieldOrder: GetTransactionsFieldOrder) => {
+    return SortByField[fieldOrder];
   },
 };
