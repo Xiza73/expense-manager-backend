@@ -9,6 +9,7 @@ export const GetTransactionServicesResponseObject = z.object({
     z.object({
       id: commonValidations.toValidNumber,
       name: z.string(),
+      user_id: commonValidations.toValidNumberOrNull,
     })
   ),
 });

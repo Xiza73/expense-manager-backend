@@ -107,6 +107,7 @@ export class Transaction {
 
     const thisExpenseAmount = this.type === TransactionType.EXPENSE ? Number(this.amount) : 0;
     const thisIncomeAmount = this.type === TransactionType.INCOME ? Number(this.amount) : 0;
+    const thisIdealDailyExpenditure = Number(account.idealDailyExpenditure);
 
     let expenseAmount = transactions.reduce(
       (sum, t) => sum + (t.type === TransactionType.EXPENSE ? Number(t.amount) : 0),
@@ -125,9 +126,33 @@ export class Transaction {
     expenseAmount = Math.round(expenseAmount * 100) / 100;
     incomeAmount = Math.round(incomeAmount * 100) / 100;
 
-    const balance = Math.round((Number(account.amount) - expenseAmount + incomeAmount) * 100) / 100;
+    const totalExpenseAmount = expenseAmount - incomeAmount;
 
-    await accountRepo.update(this.account_id, { balance, expenseAmount, incomeAmount });
+    let lastDateFromTransactions = transactions.reduce(
+      (lastDate, t) => (t.date > lastDate ? t.date : lastDate),
+      new Date(1)
+    );
+    lastDateFromTransactions = lastDateFromTransactions > this.date ? lastDateFromTransactions : this.date;
+    const daysPassedInMonth = lastDateFromTransactions.getDate();
+
+    const realDailyExpenditure = Math.round((totalExpenseAmount / daysPassedInMonth) * 100) / 100;
+
+    let realDaysSpent = Math.round((totalExpenseAmount / thisIdealDailyExpenditure) * 100) / 100;
+    realDaysSpent = Math.ceil(realDaysSpent);
+
+    let daysInDebt = Math.round(realDaysSpent - daysPassedInMonth);
+    daysInDebt = daysInDebt < 0 ? 0 : daysInDebt;
+
+    const balance = Math.round((Number(account.amount) - totalExpenseAmount) * 100) / 100;
+
+    await accountRepo.update(this.account_id, {
+      balance,
+      expenseAmount,
+      incomeAmount,
+      realDailyExpenditure,
+      realDaysSpent,
+      daysInDebt,
+    });
   }
 
   @AfterInsert()

@@ -25,6 +25,7 @@ export const transactionService = {
     try {
       const queryBuilder = transactionRepository
         .createQueryBuilder('transaction')
+        .withDeleted()
         .leftJoinAndSelect('transaction.account', 'account')
         .leftJoinAndSelect('transaction.category', 'category')
         .leftJoinAndSelect('transaction.service', 'service')
@@ -81,7 +82,10 @@ export const transactionService = {
 
   getTransaction: async (user: AuthToken, transactionId: number): Promise<GetTransactionResponse> => {
     try {
-      const transaction = await transactionRepository.findOneBy({ id: transactionId, user_id: user.id });
+      const transaction = await transactionRepository.findOne({
+        where: { id: transactionId, user_id: user.id },
+        withDeleted: true,
+      });
 
       if (!transaction) {
         return new ServiceResponse(

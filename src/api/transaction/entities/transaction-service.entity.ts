@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 import { AuthToken } from '@/api/auth/entities/auth-token.entity';
 
@@ -26,6 +26,9 @@ export class TransactionService {
 
   @Column({ type: 'int', nullable: true })
   user_id?: number;
+
+  @DeleteDateColumn({ name: 'deleted_at', default: null })
+  deletedAt?: Date;
 
   @OneToMany(() => Transaction, (transaction) => transaction.service, {})
   transactions: Transaction[];
