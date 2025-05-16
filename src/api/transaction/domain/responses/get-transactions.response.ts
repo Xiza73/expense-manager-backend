@@ -24,10 +24,12 @@ export const GetTransactionsResponseObject = z.object({
         id: z.number(),
         name: z.string(),
       }),
-      service: z.object({
-        id: z.number(),
-        name: z.string(),
-      }),
+      service: z
+        .object({
+          id: z.number(),
+          name: z.string(),
+        })
+        .nullable(),
       account: z.object({
         id: z.number(),
       }),

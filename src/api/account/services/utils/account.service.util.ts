@@ -25,17 +25,18 @@ export const accountServiceUtil = {
     return existingAccount;
   },
 
-  validateNotExistAccount: async (userId: number, month: Month, year: number) => {
+  validateNotExistMonthlyAccount: async (userId: number, month: Month, year: number, description?: string) => {
     const existingAccount = await accountRepository.findOneBy({
       user_id: userId,
       month,
       year,
+      description,
     });
 
     if (existingAccount) {
       throw new ServiceResponse(
         ResponseStatus.Failed,
-        'Account already exists for this month and year',
+        'Account already exists for this month, year and description',
         null,
         StatusCodes.BAD_REQUEST,
         ErrorCode.ACCOUNT_ALREADY_EXISTS_400
@@ -43,7 +44,24 @@ export const accountServiceUtil = {
     }
   },
 
-  getIsDefaultAccount: async (userId: number, month: Month, year: number) => {
+  validateNotExistNamedAccount: async (userId: number, description: string) => {
+    const existingAccount = await accountRepository.findOneBy({
+      user_id: userId,
+      description,
+    });
+
+    if (existingAccount) {
+      throw new ServiceResponse(
+        ResponseStatus.Failed,
+        'Account already exists for this name',
+        null,
+        StatusCodes.BAD_REQUEST,
+        ErrorCode.ACCOUNT_ALREADY_EXISTS_400
+      );
+    }
+  },
+
+  getIsDefaultAccount: async (userId: number, month?: Month, year?: number) => {
     let isDefault = false;
 
     const latestAccount = (
@@ -56,9 +74,10 @@ export const accountServiceUtil = {
       })
     )?.[0];
 
-    if (!latestAccount) {
-      isDefault = true;
-    }
+    if (!latestAccount) return true;
+
+    if (!month) return false;
+    if (!year) return false;
 
     if (latestAccount?.isDefault) {
       const latestAccountDate = new Date(latestAccount.date);
@@ -83,18 +102,19 @@ export const accountServiceUtil = {
     return isDefault;
   },
 
-  validateUpdateDateAccount: async (account: Account, month: Month, year: number) => {
+  validateUpdateDateAccount: async (account: Account, month?: Month, year?: number, description?: string) => {
     if (month !== account.month || year !== account.year) {
       const existingAccountForMonth = await accountRepository.findOneBy({
         user_id: account.user_id,
         month,
         year,
+        description,
       });
 
       if (existingAccountForMonth) {
         throw new ServiceResponse(
           ResponseStatus.Failed,
-          'Account already exists for this month and year',
+          'Account already exists for this month, year and description',
           null,
           StatusCodes.BAD_REQUEST,
           ErrorCode.ACCOUNT_ALREADY_EXISTS_400

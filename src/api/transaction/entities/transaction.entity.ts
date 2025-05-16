@@ -19,7 +19,7 @@ import { AppDataSource } from '@/data-source';
 
 import { PaymentMethod } from '../domain/payment-method.enum';
 import { TransactionType } from '../domain/transaction-type.enum';
-import { getCurrentAmounts, getDaysPassedInMonth } from '../utils/update-account.util';
+import { getCurrentAmounts, getDaysLeftInMonth, getDaysPassedInMonth } from '../utils/update-account.util';
 import { TransactionCategory } from './transaction-category.entity';
 import { TransactionService } from './transaction-service.entity';
 
@@ -32,7 +32,7 @@ export class Transaction {
   name: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  description?: string;
+  description?: string | null;
 
   @Column({ type: 'numeric', precision: 10, scale: 2 })
   amount: number;
@@ -55,8 +55,8 @@ export class Transaction {
   @Column({ type: 'int', nullable: false })
   category_id: number;
 
-  @Column({ type: 'int', nullable: false })
-  service_id: number;
+  @Column({ type: 'int', nullable: true })
+  service_id?: number | null;
 
   @Column({ type: 'int', nullable: false })
   account_id: number;
@@ -72,9 +72,10 @@ export class Transaction {
 
   @ManyToOne(() => TransactionService, (service) => service.transactions, {
     eager: true,
+    nullable: true,
   })
   @JoinColumn({ name: 'service_id', referencedColumnName: 'id' })
-  service: TransactionService;
+  service?: TransactionService;
 
   @ManyToOne(() => Account, (account) => account.transactions, {
     eager: true,
@@ -113,6 +114,7 @@ export class Transaction {
     const totalExpenseAmount = expenseAmount - incomeAmount;
 
     const daysPassedInMonth = getDaysPassedInMonth(transactions, this.date);
+    const daysLeftInMonth = getDaysLeftInMonth(transactions, this.date);
 
     const realDailyExpenditure = Math.round((totalExpenseAmount / daysPassedInMonth) * 100) / 100;
 
@@ -124,23 +126,22 @@ export class Transaction {
 
     const balance = Math.round((Number(account.amount) - totalExpenseAmount) * 100) / 100;
 
+    const leftDailyExpenditure = Math.round((balance / daysLeftInMonth) * 100) / 100;
+
     await accountRepo.update(this.account_id, {
       balance,
       expenseAmount,
       incomeAmount,
       realDailyExpenditure,
+      leftDailyExpenditure,
       realDaysSpent,
       daysInDebt,
     });
   }
 
   @AfterInsert()
-  async afterInsert() {
-    await this.updateAccount();
-  }
-
   @AfterUpdate()
-  async afterUpdate() {
+  async afterInsert() {
     await this.updateAccount();
   }
 

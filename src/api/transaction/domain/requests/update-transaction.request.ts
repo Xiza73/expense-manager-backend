@@ -15,7 +15,7 @@ export const UpdateTransactionRequestObject = z.object({
   type: z.nativeEnum(TransactionType),
   paymentMethod: commonValidations.paymentMethod,
   categoryId: z.number(),
-  serviceId: z.number(),
+  serviceId: z.number().optional(),
   accountId: z.number(),
   date: commonValidations.toValidDate,
 });

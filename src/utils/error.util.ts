@@ -21,7 +21,7 @@ export const handleErrorMessage = (prefix: string, error: any): string => {
       return `${prefix}: ${errMessage}`;
     }
 
-    if (error instanceof Error) {
+    if (error instanceof Error || error.message) {
       if (error.message.includes('numeric field overflow')) {
         return `${prefix}: Amount is too high`;
       }
@@ -31,7 +31,7 @@ export const handleErrorMessage = (prefix: string, error: any): string => {
 
     return prefix;
   } catch (err) {
-    if (error instanceof Error) {
+    if (error instanceof Error || error.message) {
       if (error.message.includes('numeric field overflow')) {
         return `${prefix}: Amount is too high`;
       }

@@ -136,11 +136,11 @@ export const transactionService = {
 
       await transactionCategoryServiceUtil.getExistingTransactionCategory(data.categoryId, user.id);
 
-      await transactionServiceServiceUtil.getExistingTransactionService(data.serviceId, user.id);
+      if (data.serviceId) await transactionServiceServiceUtil.getExistingTransactionService(data.serviceId, user.id);
 
       const { date: toCreateDate } = data;
 
-      transactionServiceUtil.validateDateRange(existingAccount.date, toCreateDate);
+      if (existingAccount.isMonthly) transactionServiceUtil.validateDateRange(existingAccount.date, toCreateDate);
 
       const newTransaction = transactionRepository.create({
         ...data,
@@ -193,7 +193,7 @@ export const transactionService = {
 
       await transactionCategoryServiceUtil.getExistingTransactionCategory(data.categoryId, user.id);
 
-      await transactionServiceServiceUtil.getExistingTransactionService(data.serviceId, user.id);
+      if (data.serviceId) await transactionServiceServiceUtil.getExistingTransactionService(data.serviceId, user.id);
 
       const { date: toCreateDate } = data;
 
@@ -205,8 +205,8 @@ export const transactionService = {
       existingTransaction.date = data.date;
       existingTransaction.type = data.type;
       existingTransaction.paymentMethod = data.paymentMethod;
-      existingTransaction.description = data.description || undefined;
-      existingTransaction.service_id = data.serviceId;
+      existingTransaction.description = data.description || null;
+      existingTransaction.service_id = data.serviceId || null;
       existingTransaction.account_id = data.accountId;
 
       delete existingTransaction.service;
