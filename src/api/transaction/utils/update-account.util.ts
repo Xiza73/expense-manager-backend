@@ -59,3 +59,31 @@ export const getDaysPassedInMonth = (transactions: Transaction[], date: Date) =>
 
   return daysPassedInMonth;
 };
+
+export const getDaysLeftInMonth = (transactions: Transaction[], date: Date) => {
+  const today = new Date();
+  const currentMonth = today.getMonth() + 1;
+  const currentYear = today.getFullYear();
+  const thisMonth = date.getMonth() + 1;
+  const thisYear = date.getFullYear();
+  const isCurrentMonth = currentMonth === thisMonth && currentYear === thisYear;
+  const isFutureMonth = currentMonth < thisMonth || (currentMonth === thisMonth && currentYear < thisYear);
+
+  let daysLeftInMonth = 0;
+
+  if (isCurrentMonth) {
+    daysLeftInMonth = daysInMonth(thisMonth, thisYear) - today.getDate();
+  } else if (isFutureMonth) {
+    let lastDateFromTransactions = transactions.reduce(
+      (lastDate, t) => (t.date > lastDate ? t.date : lastDate),
+      new Date(1)
+    );
+    lastDateFromTransactions = lastDateFromTransactions > date ? lastDateFromTransactions : date;
+
+    daysLeftInMonth = daysInMonth(thisMonth, thisYear) - lastDateFromTransactions.getDate();
+  } else {
+    daysLeftInMonth = daysInMonth(thisMonth, thisYear);
+  }
+
+  return daysLeftInMonth;
+};

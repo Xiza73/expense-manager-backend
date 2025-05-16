@@ -20,6 +20,7 @@ export const GetAccountResponseObject = z.object({
   incomeAmount: commonValidations.toValidNumber,
   idealDailyExpenditure: commonValidations.toValidNumber,
   realDailyExpenditure: commonValidations.toValidNumber,
+  leftDailyExpenditure: commonValidations.toValidNumber,
   realDaysSpent: commonValidations.toValidNumber,
   daysInDebt: commonValidations.toValidNumber,
   date: commonValidations.toValidDateWithoutTimezone,

@@ -62,6 +62,9 @@ export class Account {
   @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
   realDailyExpenditure: number;
 
+  @Column({ type: 'numeric', precision: 10, scale: 2, default: 0 })
+  leftDailyExpenditure: number;
+
   @Column({ type: 'int', default: 0 })
   realDaysSpent: number;
 

@@ -212,9 +212,7 @@ export const transactionService = {
       delete existingTransaction.service;
       delete existingTransaction.category;
 
-      await transactionRepository.save({
-        ...existingTransaction,
-      });
+      await transactionRepository.save(existingTransaction);
 
       return new ServiceResponse(
         ResponseStatus.Success,
