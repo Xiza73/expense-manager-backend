@@ -226,7 +226,7 @@ export const accountService = {
       existingAccount.amount = data.amount;
       existingAccount.currency = data.currency;
       existingAccount.color = data.color || null;
-      existingAccount.description = data.description;
+      existingAccount.description = data.description || null;
       existingAccount.month = data.month;
       existingAccount.year = data.year;
 

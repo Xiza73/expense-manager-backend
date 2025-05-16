@@ -30,7 +30,7 @@ export class Account {
   isMonthly: boolean;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  description?: string;
+  description?: string | null;
 
   @Column({ type: 'enum', enum: Month, nullable: true })
   month?: Month;

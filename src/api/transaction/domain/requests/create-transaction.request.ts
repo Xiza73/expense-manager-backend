@@ -16,7 +16,7 @@ export const CreateTransactionRequestObject = z.object({
   paymentMethod: commonValidations.paymentMethod,
   isActive: z.boolean().default(true),
   categoryId: z.number(),
-  serviceId: z.number(),
+  serviceId: z.number().optional(),
   accountId: z.number(),
 });
 export type CreateTransactionRequestObject = zod.infer<typeof CreateTransactionRequestObject>;

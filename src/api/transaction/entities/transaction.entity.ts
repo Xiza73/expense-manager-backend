@@ -32,7 +32,7 @@ export class Transaction {
   name: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })
-  description?: string;
+  description?: string | null;
 
   @Column({ type: 'numeric', precision: 10, scale: 2 })
   amount: number;
@@ -55,8 +55,8 @@ export class Transaction {
   @Column({ type: 'int', nullable: false })
   category_id: number;
 
-  @Column({ type: 'int', nullable: false })
-  service_id: number;
+  @Column({ type: 'int', nullable: true })
+  service_id?: number | null;
 
   @Column({ type: 'int', nullable: false })
   account_id: number;
@@ -72,9 +72,10 @@ export class Transaction {
 
   @ManyToOne(() => TransactionService, (service) => service.transactions, {
     eager: true,
+    nullable: true,
   })
   @JoinColumn({ name: 'service_id', referencedColumnName: 'id' })
-  service: TransactionService;
+  service?: TransactionService;
 
   @ManyToOne(() => Account, (account) => account.transactions, {
     eager: true,
