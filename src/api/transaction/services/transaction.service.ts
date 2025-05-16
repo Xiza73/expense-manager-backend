@@ -140,7 +140,7 @@ export const transactionService = {
 
       const { date: toCreateDate } = data;
 
-      transactionServiceUtil.validateDateRange(existingAccount.date, toCreateDate);
+      if (existingAccount.isMonthly) transactionServiceUtil.validateDateRange(existingAccount.date, toCreateDate);
 
       const newTransaction = transactionRepository.create({
         ...data,

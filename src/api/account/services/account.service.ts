@@ -139,7 +139,19 @@ export const accountService = {
 
   createAccount: async (user: AuthToken, data: CreateAccountRequestObject): Promise<CreateAccountResponse> => {
     try {
-      await accountServiceUtil.validateNotExistAccount(user.id, data.month, data.year);
+      if (data.isMonthly && data.month && data.year) {
+        await accountServiceUtil.validateNotExistMonthlyAccount(user.id, data.month, data.year, data.description);
+      } else if (!data.isMonthly && data.description) {
+        await accountServiceUtil.validateNotExistNamedAccount(user.id, data.description);
+      } else {
+        throw new ServiceResponse(
+          ResponseStatus.Failed,
+          'Please provide an account name or a month and year',
+          null,
+          StatusCodes.BAD_REQUEST,
+          ErrorCode.UNKNOWN_400
+        );
+      }
 
       const isDefault = await accountServiceUtil.getIsDefaultAccount(user.id, data.month, data.year);
 
@@ -174,7 +186,37 @@ export const accountService = {
     data: UpdateAccountRequestObject
   ): Promise<NullResponse> => {
     try {
+      if (data.isMonthly && (!data.month || !data.year)) {
+        throw new ServiceResponse(
+          ResponseStatus.Failed,
+          'Please provide a month and year',
+          null,
+          StatusCodes.BAD_REQUEST,
+          ErrorCode.UNKNOWN_400
+        );
+      }
+
+      if (!data.isMonthly && !data.description) {
+        throw new ServiceResponse(
+          ResponseStatus.Failed,
+          'Please provide an account name',
+          null,
+          StatusCodes.BAD_REQUEST,
+          ErrorCode.UNKNOWN_400
+        );
+      }
+
       const existingAccount = await accountServiceUtil.getExistingAccount(accountId, user.id);
+
+      if (existingAccount.isMonthly !== data.isMonthly) {
+        throw new ServiceResponse(
+          ResponseStatus.Failed,
+          'You cannot change the type of an account',
+          null,
+          StatusCodes.BAD_REQUEST,
+          ErrorCode.UNKNOWN_400
+        );
+      }
 
       await accountServiceUtil.validateUpdateDateAccount(existingAccount, data.month, data.year);
 
@@ -184,7 +226,7 @@ export const accountService = {
       existingAccount.amount = data.amount;
       existingAccount.currency = data.currency;
       existingAccount.color = data.color || null;
-      existingAccount.description = data.description || null;
+      existingAccount.description = data.description;
       existingAccount.month = data.month;
       existingAccount.year = data.year;
 

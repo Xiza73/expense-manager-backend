@@ -26,14 +26,17 @@ export class Account {
   @Column({ type: 'int', nullable: false })
   user_id: number;
 
+  @Column({ type: 'boolean', default: true })
+  isMonthly: boolean;
+
   @Column({ type: 'varchar', length: 255, nullable: true })
-  description: string | null;
+  description?: string;
 
-  @Column({ type: 'enum', enum: Month })
-  month: Month;
+  @Column({ type: 'enum', enum: Month, nullable: true })
+  month?: Month;
 
-  @Column({ type: 'int', nullable: false })
-  year: number;
+  @Column({ type: 'int', nullable: true })
+  year?: number;
 
   @Column({ type: 'timestamp without time zone' })
   date: Date;
@@ -92,12 +95,20 @@ export class Account {
   @BeforeInsert()
   @BeforeUpdate()
   updateDate() {
-    this.date = new Date(`${this.year}-${MonthOrder[this.month]}-01`);
+    if (this.isMonthly && this.year && this.month) {
+      this.date = new Date(`${this.year}-${MonthOrder[this.month]}-01`);
+    } else {
+      this.date = new Date();
+    }
   }
 
   @BeforeInsert()
   @BeforeUpdate()
   updateIdealDailyExpenditure() {
-    this.idealDailyExpenditure = this.amount / daysInMonth(MonthOrder[this.month], this.year);
+    if (this.isMonthly && this.year && this.month) {
+      this.idealDailyExpenditure = this.amount / daysInMonth(MonthOrder[this.month], this.year);
+    } else {
+      this.idealDailyExpenditure = 1;
+    }
   }
 }

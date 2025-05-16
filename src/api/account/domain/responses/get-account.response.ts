@@ -10,8 +10,9 @@ import { Month } from '../month.enum';
 export const GetAccountResponseObject = z.object({
   id: z.number(),
   description: z.string().nullable(),
-  month: z.nativeEnum(Month),
-  year: z.number(),
+  isMonthly: z.boolean(),
+  month: z.nativeEnum(Month).nullable(),
+  year: z.number().nullable(),
   currency: z.nativeEnum(Currency),
   amount: commonValidations.toValidNumber,
   balance: commonValidations.toValidNumber,
