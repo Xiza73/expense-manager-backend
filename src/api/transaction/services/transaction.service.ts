@@ -142,6 +142,8 @@ export const transactionService = {
 
       if (existingAccount.isMonthly) transactionServiceUtil.validateDateRange(existingAccount.date, toCreateDate);
 
+      const isDebtLoanTransaction = transactionServiceUtil.isDebtLoanTransaction(data.type);
+
       const newTransaction = transactionRepository.create({
         ...data,
         ...(data.description
@@ -149,6 +151,8 @@ export const transactionService = {
           : {
               description: undefined,
             }),
+        isDebtLoan: isDebtLoanTransaction,
+        isPaid: !isDebtLoanTransaction,
         date: toCreateDate,
         category_id: data.categoryId,
         service_id: data.serviceId,
@@ -157,6 +161,9 @@ export const transactionService = {
       });
 
       await transactionRepository.save(newTransaction);
+
+      // if (isDebtLoanTransaction && data.isPaid)
+      //   await transactionServiceUtil.createPaidTransaction(newTransaction, user.id);
 
       return new ServiceResponse(
         ResponseStatus.Success,
@@ -199,6 +206,17 @@ export const transactionService = {
 
       transactionServiceUtil.validateDateRange(existingAccount.date, toCreateDate);
 
+      const isDebtLoanTransaction = transactionServiceUtil.isDebtLoanTransaction(data.type);
+
+      if (existingTransaction.isDebtLoan && existingTransaction.isPaid)
+        return new ServiceResponse(
+          ResponseStatus.Failed,
+          'Transaction is already paid, update the expense/income transaction instead',
+          null,
+          StatusCodes.BAD_REQUEST,
+          ErrorCode.TRANSACTION_ALREADY_PAID_400
+        );
+
       existingTransaction.amount = data.amount;
       existingTransaction.category_id = data.categoryId;
       existingTransaction.name = data.name;
@@ -208,6 +226,8 @@ export const transactionService = {
       existingTransaction.description = data.description || null;
       existingTransaction.service_id = data.serviceId || null;
       existingTransaction.account_id = data.accountId;
+      existingTransaction.isDebtLoan = isDebtLoanTransaction;
+      existingTransaction.isPaid = !isDebtLoanTransaction;
 
       delete existingTransaction.service;
       delete existingTransaction.category;
@@ -223,6 +243,29 @@ export const transactionService = {
       );
     } catch (error) {
       return handleServiceError('Failed to update transaction', error);
+    }
+  },
+
+  payDebtLoan: async (user: AuthToken, transactionId: number): Promise<NullResponse> => {
+    try {
+      const existingTransaction = await transactionServiceUtil.getExistingDebtLoanTransaction(transactionId, user.id);
+
+      transactionServiceUtil.validateAlreadyPaidTransaction(existingTransaction.isPaid);
+
+      await transactionServiceUtil.createPaidTransaction(existingTransaction, user.id);
+      existingTransaction.isPaid = true;
+
+      await transactionRepository.save(existingTransaction);
+
+      return new ServiceResponse(
+        ResponseStatus.Success,
+        'Transaction paid successfully',
+        null,
+        StatusCodes.OK,
+        SuccessCode.SUCCESS_200
+      );
+    } catch (error) {
+      return handleServiceError('Failed to pay debt/loan', error);
     }
   },
 

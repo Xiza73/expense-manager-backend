@@ -13,11 +13,11 @@ export const getCurrentAmounts = (
   const thisIncomeAmount = type === TransactionType.INCOME ? Number(amount) : 0;
 
   let expenseAmount = transactions.reduce(
-    (sum, t) => sum + (t.type === TransactionType.EXPENSE ? Number(t.amount) : 0),
+    (sum, t) => (t.type === TransactionType.EXPENSE ? sum + Number(t.amount) : sum),
     0
   );
   let incomeAmount = transactions.reduce(
-    (sum, t) => sum + (t.type === TransactionType.INCOME ? Number(t.amount) : 0),
+    (sum, t) => (t.type === TransactionType.INCOME ? sum + Number(t.amount) : sum),
     0
   );
 

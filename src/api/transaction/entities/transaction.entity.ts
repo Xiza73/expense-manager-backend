@@ -43,6 +43,15 @@ export class Transaction {
   @Column({ type: 'enum', enum: TransactionType })
   type: TransactionType;
 
+  // @Column({ type: 'boolean', default: false })
+  // isRecurring: boolean;
+
+  @Column({ type: 'boolean', default: false })
+  isDebtLoan: boolean;
+
+  @Column({ type: 'boolean', default: true })
+  isPaid: boolean;
+
   @Column({ type: 'timestamp without time zone' })
   date: Date;
 
