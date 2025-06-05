@@ -114,6 +114,21 @@ export const transactionRouter: Router = (() => {
   );
 
   transactionRegistry.registerPath({
+    method: Method.POST,
+    path: '/api/transaction/{id}/pay',
+    tags: [Module.TRANSACTION],
+    summary: 'Pay a debt/loan',
+    responses: createApiResponses([
+      {
+        schema: NullResponseSchema,
+        statusCode: StatusCodes.OK,
+      },
+    ]),
+    parameters: idParamExample('Transaction ID'),
+  });
+  router.post('/:id/pay', authenticate, transactionController.payDebtLoan);
+
+  transactionRegistry.registerPath({
     method: Method.DELETE,
     path: '/api/transaction/{id}',
     tags: [Module.TRANSACTION],

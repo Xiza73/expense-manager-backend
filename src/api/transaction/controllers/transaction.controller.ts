@@ -49,6 +49,16 @@ export const transactionController = {
     }
   },
 
+  payDebtLoan: async (req: Request, res: Response) => {
+    try {
+      const serviceResponse = await transactionService.payDebtLoan(req.decodedUser, Number(req.params.id));
+
+      handleServiceResponse(serviceResponse, res);
+    } catch (error) {
+      handleControllerError(error, res);
+    }
+  },
+
   deleteTransaction: async (req: Request, res: Response) => {
     try {
       const serviceResponse = await transactionService.deleteTransaction(req.decodedUser, Number(req.params.id));
