@@ -1,4 +1,4 @@
-# Expense Manager Backend
+# Habit Sumaq Backend
 
 ## Start Postgres with Docker
 

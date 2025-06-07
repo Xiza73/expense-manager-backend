@@ -1,7 +1,7 @@
 {
-  "name": "expense-manager",
-  "version": "0.8.0",
-  "description": "",
+  "name": "habit-sumaq-backend",
+  "description": "A modern app for organizing your expenses, schedules, and more.",
+  "version": "0.9.0",
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch --clear-screen=false src/index.ts | pino-pretty",
