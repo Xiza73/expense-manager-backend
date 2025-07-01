@@ -135,7 +135,7 @@ export class Transaction {
 
     const balance = Math.round((Number(account.amount) - totalExpenseAmount) * 100) / 100;
 
-    const leftDailyExpenditure = Math.round((balance / daysLeftInMonth) * 100) / 100;
+    const leftDailyExpenditure = Math.round((balance / (daysLeftInMonth || 1)) * 100) / 100;
 
     await accountRepo.update(this.account_id, {
       balance,
