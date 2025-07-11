@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import { Brackets } from 'typeorm';
 
 import { accountServiceUtil } from '@/api/account/services/utils/account.service.util';
 import { AuthToken } from '@/api/auth/entities/auth-token.entity';
@@ -10,6 +11,7 @@ import { handleErrorMessage, handleServiceError } from '@/utils/error.util';
 
 import { CreateTransactionRequestObject } from '../domain/requests/create-transaction.request';
 import { GetTransactionsFieldOrder, GetTransactionsRequestObject } from '../domain/requests/get-transactions.request';
+import { PayDebtLoanRequestObject } from '../domain/requests/pay-debt-loan.request';
 import { UpdateTransactionRequestObject } from '../domain/requests/update-transaction.request';
 import { GetTransactionResponse, GetTransactionResponseObject } from '../domain/responses/get-transaction.response';
 import { GetTransactionsResponse, GetTransactionsResponseObject } from '../domain/responses/get-transactions.response';
@@ -21,7 +23,18 @@ import { transactionServiceServiceUtil } from './utils/transaction-service.servi
 export const transactionService = {
   getTransactions: async (
     user: AuthToken,
-    { page, limit, accountId, categoryId, serviceId, fieldOrder, order }: GetTransactionsRequestObject
+    {
+      page,
+      limit,
+      search,
+      accountId,
+      categoryId,
+      serviceId,
+      fieldOrder,
+      order,
+      type,
+      paymentMethod,
+    }: GetTransactionsRequestObject
   ): Promise<GetTransactionsResponse> => {
     try {
       const queryBuilder = transactionRepository
@@ -42,6 +55,25 @@ export const transactionService = {
 
       if (serviceId) {
         queryBuilder.andWhere('transaction.service_id = :serviceId', { serviceId });
+      }
+
+      if (search) {
+        queryBuilder.andWhere(
+          new Brackets((qb) => {
+            qb.where('transaction.name ILIKE :search', { search: `%${search}%` }).orWhere(
+              'transaction.description ILIKE :search',
+              { search: `%${search}%` }
+            );
+          })
+        );
+      }
+
+      if (type) {
+        queryBuilder.andWhere('transaction.type = :type', { type });
+      }
+
+      if (paymentMethod) {
+        queryBuilder.andWhere('transaction.paymentMethod = :paymentMethod', { paymentMethod });
       }
 
       if (fieldOrder && order) {
@@ -246,14 +278,46 @@ export const transactionService = {
     }
   },
 
-  payDebtLoan: async (user: AuthToken, transactionId: number): Promise<NullResponse> => {
+  payDebtLoan: async (
+    user: AuthToken,
+    transactionId: number,
+    { amount, isPartial }: PayDebtLoanRequestObject
+  ): Promise<NullResponse> => {
     try {
       const existingTransaction = await transactionServiceUtil.getExistingDebtLoanTransaction(transactionId, user.id);
+      const startAmount = existingTransaction.amount;
 
       transactionServiceUtil.validateAlreadyPaidTransaction(existingTransaction.isPaid);
 
+      if (isPartial) {
+        if (amount <= 0)
+          return new ServiceResponse(
+            ResponseStatus.Failed,
+            'Partial payment amount must be greater than zero',
+            null,
+            StatusCodes.BAD_REQUEST,
+            ErrorCode.INVALID_PARTIAL_PAYMENT_AMOUNT_400
+          );
+
+        if (amount > existingTransaction.amount)
+          return new ServiceResponse(
+            ResponseStatus.Failed,
+            'Partial payment amount cannot exceed the total amount of the debt/loan',
+            null,
+            StatusCodes.BAD_REQUEST,
+            ErrorCode.PARTIAL_PAYMENT_EXCEEDS_TOTAL_AMOUNT_400
+          );
+
+        existingTransaction.amount = amount;
+      }
+
       await transactionServiceUtil.createPaidTransaction(existingTransaction, user.id);
+
       existingTransaction.isPaid = true;
+      if (isPartial) {
+        existingTransaction.amount = startAmount - amount;
+        existingTransaction.isPaid = false;
+      }
 
       await transactionRepository.save(existingTransaction);
 

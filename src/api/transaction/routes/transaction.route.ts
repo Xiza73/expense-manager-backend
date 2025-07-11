@@ -18,6 +18,7 @@ import {
   GetTransactionsRequestParameters,
   GetTransactionsRequestSchema,
 } from '../domain/requests/get-transactions.request';
+import { PayDebtLoanRequestExample, PayDebtLoanRequestSchema } from '../domain/requests/pay-debt-loan.request';
 import {
   UpdateTransactionRequestExample,
   UpdateTransactionRequestSchema,
@@ -124,9 +125,16 @@ export const transactionRouter: Router = (() => {
         statusCode: StatusCodes.OK,
       },
     ]),
+    requestBody: {
+      content: {
+        'application/json': {
+          example: PayDebtLoanRequestExample,
+        },
+      },
+    },
     parameters: idParamExample('Transaction ID'),
   });
-  router.post('/:id/pay', authenticate, transactionController.payDebtLoan);
+  router.post('/:id/pay', authenticate, validateRequest(PayDebtLoanRequestSchema), transactionController.payDebtLoan);
 
   transactionRegistry.registerPath({
     method: Method.DELETE,

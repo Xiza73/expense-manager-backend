@@ -51,7 +51,7 @@ export const transactionController = {
 
   payDebtLoan: async (req: Request, res: Response) => {
     try {
-      const serviceResponse = await transactionService.payDebtLoan(req.decodedUser, Number(req.params.id));
+      const serviceResponse = await transactionService.payDebtLoan(req.decodedUser, Number(req.params.id), req.body);
 
       handleServiceResponse(serviceResponse, res);
     } catch (error) {
