@@ -6,6 +6,7 @@ import { Order } from '@/domain/order.interface';
 import { Parameters } from '@/domain/parameter.interface';
 import { commonValidations } from '@/utils/common-validation.util';
 
+import { PaymentMethod } from '../payment-method.enum';
 import { TransactionType } from '../transaction-type.enum';
 
 export const GetTransactionsFieldOrder = {
@@ -21,7 +22,9 @@ export type GetTransactionsFieldOrder = (typeof GetTransactionsFieldOrder)[keyof
 
 const GetTransactionsRequestObject = z.object({
   ...ListSchemaQuery.shape,
+  search: z.string().optional(),
   type: z.nativeEnum(TransactionType).optional(),
+  paymentMethod: z.nativeEnum(PaymentMethod).optional(),
   accountId: commonValidations.toValidNumber,
   categoryId: commonValidations.toValidNumber.optional(),
   serviceId: commonValidations.toValidNumber.optional(),

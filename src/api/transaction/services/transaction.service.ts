@@ -1,4 +1,5 @@
 import { StatusCodes } from 'http-status-codes';
+import { Brackets } from 'typeorm';
 
 import { accountServiceUtil } from '@/api/account/services/utils/account.service.util';
 import { AuthToken } from '@/api/auth/entities/auth-token.entity';
@@ -21,7 +22,18 @@ import { transactionServiceServiceUtil } from './utils/transaction-service.servi
 export const transactionService = {
   getTransactions: async (
     user: AuthToken,
-    { page, limit, accountId, categoryId, serviceId, fieldOrder, order }: GetTransactionsRequestObject
+    {
+      page,
+      limit,
+      search,
+      accountId,
+      categoryId,
+      serviceId,
+      fieldOrder,
+      order,
+      type,
+      paymentMethod,
+    }: GetTransactionsRequestObject
   ): Promise<GetTransactionsResponse> => {
     try {
       const queryBuilder = transactionRepository
@@ -42,6 +54,25 @@ export const transactionService = {
 
       if (serviceId) {
         queryBuilder.andWhere('transaction.service_id = :serviceId', { serviceId });
+      }
+
+      if (search) {
+        queryBuilder.andWhere(
+          new Brackets((qb) => {
+            qb.where('transaction.name ILIKE :search', { search: `%${search}%` }).orWhere(
+              'transaction.description ILIKE :search',
+              { search: `%${search}%` }
+            );
+          })
+        );
+      }
+
+      if (type) {
+        queryBuilder.andWhere('transaction.type = :type', { type });
+      }
+
+      if (paymentMethod) {
+        queryBuilder.andWhere('transaction.paymentMethod = :paymentMethod', { paymentMethod });
       }
 
       if (fieldOrder && order) {
