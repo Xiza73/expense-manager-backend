@@ -11,6 +11,7 @@ import { handleErrorMessage, handleServiceError } from '@/utils/error.util';
 
 import { CreateTransactionRequestObject } from '../domain/requests/create-transaction.request';
 import { GetTransactionsFieldOrder, GetTransactionsRequestObject } from '../domain/requests/get-transactions.request';
+import { PayDebtLoanRequestObject } from '../domain/requests/pay-debt-loan.request';
 import { UpdateTransactionRequestObject } from '../domain/requests/update-transaction.request';
 import { GetTransactionResponse, GetTransactionResponseObject } from '../domain/responses/get-transaction.response';
 import { GetTransactionsResponse, GetTransactionsResponseObject } from '../domain/responses/get-transactions.response';
@@ -277,14 +278,46 @@ export const transactionService = {
     }
   },
 
-  payDebtLoan: async (user: AuthToken, transactionId: number): Promise<NullResponse> => {
+  payDebtLoan: async (
+    user: AuthToken,
+    transactionId: number,
+    { amount, isPartial }: PayDebtLoanRequestObject
+  ): Promise<NullResponse> => {
     try {
       const existingTransaction = await transactionServiceUtil.getExistingDebtLoanTransaction(transactionId, user.id);
+      const startAmount = existingTransaction.amount;
 
       transactionServiceUtil.validateAlreadyPaidTransaction(existingTransaction.isPaid);
 
+      if (isPartial) {
+        if (amount <= 0)
+          return new ServiceResponse(
+            ResponseStatus.Failed,
+            'Partial payment amount must be greater than zero',
+            null,
+            StatusCodes.BAD_REQUEST,
+            ErrorCode.INVALID_PARTIAL_PAYMENT_AMOUNT_400
+          );
+
+        if (amount > existingTransaction.amount)
+          return new ServiceResponse(
+            ResponseStatus.Failed,
+            'Partial payment amount cannot exceed the total amount of the debt/loan',
+            null,
+            StatusCodes.BAD_REQUEST,
+            ErrorCode.PARTIAL_PAYMENT_EXCEEDS_TOTAL_AMOUNT_400
+          );
+
+        existingTransaction.amount = amount;
+      }
+
       await transactionServiceUtil.createPaidTransaction(existingTransaction, user.id);
+
       existingTransaction.isPaid = true;
+      if (isPartial) {
+        existingTransaction.amount = startAmount - amount;
+        existingTransaction.isPaid = false;
+      }
 
       await transactionRepository.save(existingTransaction);
 
