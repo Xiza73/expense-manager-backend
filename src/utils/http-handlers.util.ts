@@ -19,9 +19,24 @@ export const handleControllerError = (error: Error, response: Response) => {
     );
 };
 
+const handleBoolean = (value: string) => {
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+
+  return value;
+};
+
 export const validateRequest = (schema: ZodSchema) => (req: Request, res: Response, next: NextFunction) => {
   try {
-    const cleanReq = schema.parse({ body: req.body, query: req.query, params: req.params });
+    let query: any = req.query;
+
+    if (query) {
+      query = Object.fromEntries(
+        Object.entries(req.query).map(([key, value]) => [key, typeof value === 'string' ? handleBoolean(value) : value])
+      );
+    }
+
+    const cleanReq = schema.parse({ body: req.body, query, params: req.params });
 
     req.body = cleanReq.body;
     req.query = cleanReq.query;

@@ -24,16 +24,17 @@ export const transactionService = {
   getTransactions: async (
     user: AuthToken,
     {
-      page,
-      limit,
-      search,
       accountId,
       categoryId,
-      serviceId,
       fieldOrder,
+      isPaid,
+      limit,
       order,
-      type,
+      page,
       paymentMethod,
+      search,
+      serviceId,
+      type,
     }: GetTransactionsRequestObject
   ): Promise<GetTransactionsResponse> => {
     try {
@@ -55,6 +56,10 @@ export const transactionService = {
 
       if (serviceId) {
         queryBuilder.andWhere('transaction.service_id = :serviceId', { serviceId });
+      }
+
+      if (isPaid !== undefined) {
+        queryBuilder.andWhere('transaction.isPaid = :isPaid', { isPaid });
       }
 
       if (search) {
