@@ -28,6 +28,7 @@ const GetTransactionsRequestObject = z.object({
   accountId: commonValidations.toValidNumber,
   categoryId: commonValidations.toValidNumber.optional(),
   serviceId: commonValidations.toValidNumber.optional(),
+  isPaid: z.boolean().optional(),
   fieldOrder: z.nativeEnum(GetTransactionsFieldOrder).optional(),
   order: z.nativeEnum(Order).default(Order.DESC),
 });

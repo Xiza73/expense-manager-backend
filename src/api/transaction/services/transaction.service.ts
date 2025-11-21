@@ -24,16 +24,17 @@ export const transactionService = {
   getTransactions: async (
     user: AuthToken,
     {
-      page,
-      limit,
-      search,
       accountId,
       categoryId,
-      serviceId,
       fieldOrder,
+      isPaid,
+      limit,
       order,
-      type,
+      page,
       paymentMethod,
+      search,
+      serviceId,
+      type,
     }: GetTransactionsRequestObject
   ): Promise<GetTransactionsResponse> => {
     try {
@@ -55,6 +56,10 @@ export const transactionService = {
 
       if (serviceId) {
         queryBuilder.andWhere('transaction.service_id = :serviceId', { serviceId });
+      }
+
+      if (isPaid !== undefined) {
+        queryBuilder.andWhere('transaction.isPaid = :isPaid', { isPaid });
       }
 
       if (search) {
@@ -236,7 +241,7 @@ export const transactionService = {
 
       const { date: toCreateDate } = data;
 
-      transactionServiceUtil.validateDateRange(existingAccount.date, toCreateDate);
+      if (existingAccount.isMonthly) transactionServiceUtil.validateDateRange(existingAccount.date, toCreateDate);
 
       const isDebtLoanTransaction = transactionServiceUtil.isDebtLoanTransaction(data.type);
 
@@ -281,7 +286,7 @@ export const transactionService = {
   payDebtLoan: async (
     user: AuthToken,
     transactionId: number,
-    { amount, isPartial }: PayDebtLoanRequestObject
+    { amount, isPartial, description }: PayDebtLoanRequestObject
   ): Promise<NullResponse> => {
     try {
       const existingTransaction = await transactionServiceUtil.getExistingDebtLoanTransaction(transactionId, user.id);
@@ -311,7 +316,7 @@ export const transactionService = {
         existingTransaction.amount = amount;
       }
 
-      await transactionServiceUtil.createPaidTransaction(existingTransaction, user.id);
+      await transactionServiceUtil.createPaidTransaction(existingTransaction, description || '', user.id);
 
       existingTransaction.isPaid = true;
       if (isPartial) {
