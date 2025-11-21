@@ -73,7 +73,7 @@ export const transactionServiceUtil = {
     }
   },
 
-  createPaidTransaction: async (transaction: Transaction, userId: number) => {
+  createPaidTransaction: async (transaction: Transaction, description: string, userId: number) => {
     let serviceId = transaction.service_id;
 
     if (transaction.service_id) {
@@ -92,6 +92,7 @@ export const transactionServiceUtil = {
       type: transactionType,
       isPaid: true,
       service_id: serviceId,
+      description,
     });
 
     transaction.isPaid = true;

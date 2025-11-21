@@ -286,7 +286,7 @@ export const transactionService = {
   payDebtLoan: async (
     user: AuthToken,
     transactionId: number,
-    { amount, isPartial }: PayDebtLoanRequestObject
+    { amount, isPartial, description }: PayDebtLoanRequestObject
   ): Promise<NullResponse> => {
     try {
       const existingTransaction = await transactionServiceUtil.getExistingDebtLoanTransaction(transactionId, user.id);
@@ -316,7 +316,7 @@ export const transactionService = {
         existingTransaction.amount = amount;
       }
 
-      await transactionServiceUtil.createPaidTransaction(existingTransaction, user.id);
+      await transactionServiceUtil.createPaidTransaction(existingTransaction, description || '', user.id);
 
       existingTransaction.isPaid = true;
       if (isPartial) {
